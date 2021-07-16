@@ -103,7 +103,7 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
     Colors[0] = QColor(  0,   0, 255);
     Colors[1] = QColor(  0, 255,   0);
     Colors[2] = QColor(  0, 255, 255);
-    Colors[3] = QColor(255,   0, 0);
+    Colors[3] = QColor(255,   0,   0);
     Colors[4] = QColor(255,   0, 255);
     Colors[5] = QColor(255, 255,   0);
     Colors[6] = QColor(255, 255, 255);
@@ -166,7 +166,7 @@ void
 MainWindow::restoreSettings() {
     QSettings settings;
     idsAddress = Addr4882_t(settings.value("IdsAddress", 0).toInt());
-    vgAddress  = Addr4882_t(settings.value("VgAddress", 0).toInt());
+    vgAddress  = Addr4882_t(settings.value("VgAddress",  0).toInt());
 }
 
 
@@ -368,6 +368,20 @@ MainWindow::checkInstruments() {
 /////////////////////////////////////////////
 void
 MainWindow::updateUserInterface() {
+    if(presentMeasure == NoMeasure) {
+        ui->statusGroupBox->setEnabled(true);
+        ui->startIDSButton->setEnabled(true);
+        ui->startRdsButton->setEnabled(true);
+    }
+    else if(presentMeasure == IdsVds_vs_Vg) {
+        ui->statusGroupBox->setDisabled(true);
+        ui->startIDSButton->setEnabled(true);
+        ui->startRdsButton->setDisabled(true);
+    } else if(presentMeasure == Rds_vs_Vg) {
+        ui->statusGroupBox->setDisabled(true);
+        ui->startIDSButton->setDisabled(true);
+        ui->startRdsButton->setEnabled(true);
+    }
 }
 
 /////////////////////////////////////////////
