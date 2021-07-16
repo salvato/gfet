@@ -197,7 +197,7 @@ MainWindow::prepareLogFile() {
     if (!pLogFile->open(QIODevice::WriteOnly)) {
         QMessageBox::information(nullptr, "Conductivity",
                                  QString("Unable to open file %1: %2.")
-                                 .arg(sLogFileName).arg(pLogFile->errorString()));
+                                 .arg(sLogFileName, pLogFile->errorString()));
         delete pLogFile;
         pLogFile = nullptr;
     }
@@ -457,8 +457,8 @@ MainWindow::prepareOutputFile(QString sBaseDir,
     QString sName = fileInfo.baseName();
     QString sExt = fileInfo.completeSuffix();
     QString sFilePath = QString("%1/%2_%3.%4")
-                                .arg(sBaseDir)
-                                .arg(sName)
+                                .arg(sBaseDir,
+                                sName)
                                 .arg(currentStep)
                                 .arg(sExt);
     pOutputFile = new QFile(sFilePath);
@@ -541,8 +541,8 @@ MainWindow::on_startIDSButton_clicked() {
     if(pVgGenerator) {
         pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
         while(!pVgGenerator->isReadyForTrigger()) {}
-        connect(pVgGenerator, SIGNAL(newReading(QDateTime, QString)),
-                this, SLOT(onNewVgGeneratorReading(QDateTime, QString)));
+        connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
+                this, SLOT(onNewVgGeneratorReading(QDateTime,QString)));
         pVgGenerator->sendTrigger();
     }
     else {
@@ -593,7 +593,7 @@ MainWindow::onClearComplianceEvent() {
 
 bool
 MainWindow::DecodeReadings(QString sDataRead, double *current, double *voltage) { // Decode readings
-    QStringList sMeasures = QStringList(sDataRead.split(",", QString::SkipEmptyParts));
+    QStringList sMeasures = QStringList(sDataRead.split(",", Qt::SkipEmptyParts));
     if(sMeasures.count() < 2) {
         logMessage("Measurement Format Error");
         return false;
@@ -609,7 +609,7 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     Q_UNUSED(dataTime)
     disconnect(pIdsEvaluator, SIGNAL(sweepDone(QDateTime,QString)), this, nullptr);
     ui->statusBar->showMessage("Sweep Done: Decoding readings...Please wait");
-    QStringList sMeasures = QStringList(sData.split(",", QString::SkipEmptyParts));
+    QStringList sMeasures = QStringList(sData.split(",", Qt::SkipEmptyParts));
     if(sMeasures.count() < 2) {
         stopMeasure();
         ui->statusBar->showMessage(QString(Q_FUNC_INFO) + QString(" Error: No Sweep Values"));

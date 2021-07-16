@@ -1,6 +1,6 @@
 /*
  *
-Copyright (C) 2016  Gabriele Salvato
+Copyright (C) 2021  Gabriele Salvato
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -139,10 +139,10 @@ plotPropertiesDlg::connectSignals() {
     connect(&labelFontButton, SIGNAL(clicked()),
             this, SLOT(onChangeLabelsFont()));
     // Line Edit
-    connect(&gridPenWidthEdit, SIGNAL(textChanged(const QString)),
-            this, SLOT(onChangeGridPenWidth(const QString)));
-    connect(&maxDataPointsEdit, SIGNAL(textChanged(const QString)),
-            this, SLOT(onChangeMaxDataPoints(const QString)));
+    connect(&gridPenWidthEdit, SIGNAL(textChanged(QString)),
+            this, SLOT(onChangeGridPenWidth(QString)));
+    connect(&maxDataPointsEdit, SIGNAL(textChanged(QString)),
+            this, SLOT(onChangeMaxDataPoints(QString)));
     // Button Box
     connect(pButtonBox, SIGNAL(accepted()),
             this, SLOT(onOk()));
@@ -221,7 +221,7 @@ plotPropertiesDlg::onChangeLabelsFont() {
         painterFontSize   = painterFont.pointSize();
         painterFontWeight = QFont::Weight(painterFont.weight());
         painterFontItalic = painterFont.italic();
-        qDebug() << painterFontName << painterFontSize <<painterFontWeight;
+        //qDebug() << painterFontName << painterFontSize <<painterFontWeight;
         emit configChanged();
     }
 }

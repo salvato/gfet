@@ -1,6 +1,6 @@
 /*
  *
-Copyright (C) 2016  Gabriele Salvato
+Copyright (C) 2021  Gabriele Salvato
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "AxisLimits.h"
 #include "AxisFrame.h"
 
-#include <QDialog>
+#include <QWidget>
 #include <QPen>
 
 
-class Plot2D : public QDialog
+class Plot2D : public QWidget
 {
     Q_OBJECT
 public:
@@ -39,7 +39,7 @@ public:
     void SetLimits (double XMin, double XMax, double YMin, double YMax,
                     bool AutoX, bool AutoY, bool LogX, bool LogY);
     DataStream2D* NewDataSet(int Id, int PenWidth, QColor Color, int Symbol, QString Title);
-    bool DelDataSet(int Id);
+    bool ClearDataSet(int Id);
     void NewPoint(int Id, double x, double y);
     void SetShowDataSet(int Id, bool Show);
     void SetShowTitle(int Id, bool show);

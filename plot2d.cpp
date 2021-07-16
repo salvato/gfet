@@ -1,6 +1,6 @@
 /*
  *
-Copyright (C) 2016  Gabriele Salvato
+Copyright (C) 2021  Gabriele Salvato
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 Plot2D::Plot2D(QWidget *parent, QString Title)
-    : QDialog(parent)
+    : QWidget(parent)
     , sTitle(Title)
 {
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
@@ -37,7 +37,8 @@ Plot2D::Plot2D(QWidget *parent, QString Title)
     setWindowFlags(windowFlags() |  Qt::WindowMinMaxButtonsHint);
     setMouseTracking(true);
 //  setAttribute(Qt::WA_AlwaysShowToolTips);
-    setWindowIcon(QIcon("qrc:/plot.png"));
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setWindowIcon(QIcon(":/plot.png"));
     QSettings settings;
     restoreGeometry(settings.value(sTitle+QString("Plot2D")).toByteArray());
     xMarker      = 0.0;
@@ -82,7 +83,7 @@ void
 Plot2D::keyPressEvent(QKeyEvent *e) {
     // To avoid closing the Plot upon Esc keypress
     if(e->key() != Qt::Key_Escape)
-        QDialog::keyPressEvent(e);
+        QWidget::keyPressEvent(e);
 }
 
 
@@ -241,6 +242,20 @@ Plot2D::NewDataSet(int Id, int PenWidth, QColor Color, int Symbol, QString Title
 }
 
 
+bool
+Plot2D::ClearDataSet(int Id) {
+    bool bResult = false;
+    for(int i=0; i<dataSetList.count(); i++) {
+        DataStream2D* pDataItem = dataSetList.at(i);
+        if(pDataItem->GetId() == Id) {
+            pDataItem->RemoveAllPoints();
+            bResult = true;
+        }
+    }
+    return bResult;
+}
+
+
 void
 Plot2D::SetShowDataSet(int Id, bool Show) {
     if(!dataSetList.isEmpty()) {
@@ -363,18 +378,18 @@ Plot2D::XTicLin(QPainter* painter, QFontMetrics fontMetrics) {
             fmant = isig * fmant;
         }
         if(double(isx*fmant) <= -10.0)
-            Label.sprintf("% 6.2f", double(isx*fmant));
+            Label = QString("%1").arg(double(isx*fmant), 6, 'f', 2, ' ');
         else
-            Label.sprintf("% 6.3f", double(isx*fmant));
-        ix0 = ix - fontMetrics.width(Label)/2;
+            Label = QString("%1").arg(double(isx*fmant), 6, 'f', 3, ' ');
+        ix0 = ix - fontMetrics.horizontalAdvance(Label)/2;
         painter->setPen(labelPen);
         painter->drawText(QPoint(ix0, iy0), Label);
         dxx = isig*dxx - dx;
-    }	while(dxx >= xmin);
+    } while(dxx >= xmin);
     painter->setPen(labelPen);
     painter->drawText(QPoint(int(Pf.right + 2),	int(Pf.bottom - 0.5*fontMetrics.height())), "x10");
-    int icx = fontMetrics.width("x10 ");
-    Label.sprintf("%-3i", iesp);
+    int icx = fontMetrics.horizontalAdvance("x10 ");
+    Label = QString("%1").arg(iesp, 0, 10, QLatin1Char(' '));
     painter->setPen(labelPen);
     painter->drawText(QPoint(int(Pf.right+icx),	int(Pf.bottom - fontMetrics.height())), Label);
 }
@@ -428,10 +443,10 @@ Plot2D::YTicLin(QPainter* painter, QFontMetrics fontMetrics) {
             fmant = isig * fmant;
         }
         if(double(isy*fmant) <= -10.0)
-            Label.sprintf("% 7.3f", double(isy*fmant));
+            Label = QString("%1").arg(double(isy*fmant), 7, 'f', 3, ' ');
         else
-            Label.sprintf("% 7.4f", double(isy*fmant));
-        ix0 = int(Pf.left - fontMetrics.width(Label) - 5);
+            Label = QString("%1").arg(double(isy*fmant), 7, 'f', 4, ' ');
+        ix0 = int(Pf.left - fontMetrics.horizontalAdvance(Label) - 5);
         iy0 = iy + fontMetrics.height()/2;
         painter->setPen(labelPen);
         painter->drawText(QPoint(ix0, iy0), Label);
@@ -440,8 +455,8 @@ Plot2D::YTicLin(QPainter* painter, QFontMetrics fontMetrics) {
     QPoint point(int(Pf.left), int(Pf.top-0.5*fontMetrics.height()));
     painter->setPen(labelPen);
     painter->drawText(point, "x10");
-    int icx = fontMetrics.width("x10 ");
-    Label.sprintf("%-3i", iesp);
+    int icx = fontMetrics.horizontalAdvance("x10 ");
+    Label = QString("%1").arg(iesp, 0, 10, QLatin1Char(' '));
     painter->setPen(labelPen);
     painter->drawText(QPoint(int(int(Pf.left)+icx),int(Pf.top-fontMetrics.height())),Label);
 }
@@ -477,8 +492,8 @@ Plot2D::XTicLog(QPainter* painter, QFontMetrics fontMetrics) {
             dx = pow(10.0, (minx + i));
             if(x >= Ax.XMin) {
                 ix = int(Pf.left + (log10(x)-xlmin)*xfact);
-                Label.sprintf("%7.0e", x);
-                ix0 = ix - fontMetrics.width(Label)/2;
+                Label = QString("%1").arg(x, 7, 'e', 0, ' ');
+                ix0 = ix - fontMetrics.horizontalAdvance(Label)/2;
                 painter->setPen(labelPen);
                 painter->drawText(QPoint(ix0, iy0), Label);
                 init = false;
@@ -489,15 +504,15 @@ Plot2D::XTicLog(QPainter* painter, QFontMetrics fontMetrics) {
                     ix = int(Pf.left + (log10(x)-xlmin)*xfact);
                     painter->setPen(gridPen);
                     painter->drawLine(QLine(ix, int(Pf.top), ix, jy));
-                    Label.sprintf("%7.0e", x);
+                    Label = QString("%1").arg(x, 7, 'e', 0, ' ');
                     if(init || (j == 9 && decades == 1)) {
-                        ix0 = ix - fontMetrics.width(Label)/2;
+                        ix0 = ix - fontMetrics.horizontalAdvance(Label)/2;
                         painter->setPen(labelPen);
                         painter->drawText(QPoint(ix0, iy0), Label);
                         init = false;
                     } else if (decades == 1) {
                         Label = Label.left(2);
-                        ix0 = ix - fontMetrics.width(Label)/2;
+                        ix0 = ix - fontMetrics.horizontalAdvance(Label)/2;
                         painter->setPen(labelPen);
                         painter->drawText(QPoint(ix0, iy0), Label);
                     }
@@ -505,9 +520,9 @@ Plot2D::XTicLog(QPainter* painter, QFontMetrics fontMetrics) {
             }
         }// for(i=0; i<decades; i++)
         if((decades != 1) && (x <= Ax.XMax)) {
-            Label.sprintf("%7.0e", x);
+            Label = QString("%1").arg(x, 7, 'e', 0, ' ');
             ix = int(Pf.left + (log10(x)-xlmin)*xfact);
-            ix0 = ix - fontMetrics.width(Label)/2;
+            ix0 = ix - fontMetrics.horizontalAdvance(Label)/2;
             painter->setPen(labelPen);
             painter->drawText(QPoint(ix0, iy0), Label);
         }
@@ -518,8 +533,8 @@ Plot2D::XTicLog(QPainter* painter, QFontMetrics fontMetrics) {
                 ix = int(Pf.left + (log10(x)-xlmin)*xfact);
                 painter->setPen(gridPen);
                 painter->drawLine(QLine(ix, int(Pf.top),ix, jy));
-                Label.sprintf("%7.0e", x);
-                ix0 = ix - fontMetrics.width(Label)/2;
+                Label = QString("%1").arg(x, 7, 'e', 0, ' ');
+                ix0 = ix - fontMetrics.horizontalAdvance(Label)/2;
                 painter->setPen(labelPen);
                 painter->drawText(QPoint(ix0, iy0), Label);
             }
@@ -555,8 +570,8 @@ Plot2D::YTicLog(QPainter* painter, QFontMetrics fontMetrics) {
             dy = pow(10.0, (miny + i));
             if(y >= Ax.YMin) {
                 iy = int(Pf.bottom + (log10(y)-ylmin)*yfact);
-                Label.sprintf("%7.0e", y);
-                ix0 = int(Pf.left - fontMetrics.width(Label) - 5);
+                Label = QString("%1").arg(y, 7, 'e', 0, ' ');
+                ix0 = int(Pf.left - fontMetrics.horizontalAdvance(Label) - 5);
                 iy0 = iy + fontMetrics.height()/2;
                 painter->setPen(labelPen);
                 painter->drawText(QPoint(ix0, iy0), Label);
@@ -568,16 +583,16 @@ Plot2D::YTicLog(QPainter* painter, QFontMetrics fontMetrics) {
                     iy = int(Pf.bottom + (log10(y)-ylmin)*yfact);
                     painter->setPen(gridPen);
                     painter->drawLine(QLine(int(Pf.left-5), iy, int(Pf.right), iy));
-                    Label.sprintf("%7.0e", y);
+                    Label = QString("%1").arg(y, 7, 'e', 0, ' ');
                     if(init || (j == 9 && decades == 1)) {
-                        ix0 = int(Pf.left - fontMetrics.width(Label) - 5);
+                        ix0 = int(Pf.left - fontMetrics.horizontalAdvance(Label) - 5);
                         iy0 = iy + fontMetrics.height()/2;
                         painter->setPen(labelPen);
                         painter->drawText(QPoint(ix0, iy0), Label);
                         init = false;
                     } else if (decades == 1) {
                         Label = Label.left(2);
-                        ix0 = int(Pf.left - fontMetrics.width(Label) - 5);
+                        ix0 = int(Pf.left - fontMetrics.horizontalAdvance(Label) - 5);
                         iy0 = iy + fontMetrics.height()/2;
                         painter->setPen(labelPen);
                         painter->drawText(QPoint(ix0, iy0), Label);
@@ -586,9 +601,9 @@ Plot2D::YTicLog(QPainter* painter, QFontMetrics fontMetrics) {
             }
         }// for(i=0; i<decades; i++)
         if((decades != 1) && (y <= Ax.YMax)) {
-            Label.sprintf("%7.0e", y);
+            Label = QString("%1").arg(y, 7, 'e', 0, ' ');
             iy = int(Pf.bottom - (log10(y)-ylmin)*yfact);
-            ix0 = int(Pf.left - fontMetrics.width(Label) - 5);
+            ix0 = int(Pf.left - fontMetrics.horizontalAdvance(Label) - 5);
             iy0 = iy + fontMetrics.height()/2;
             painter->setPen(labelPen);
             painter->drawText(QPoint(ix0, iy0), Label);
@@ -600,8 +615,8 @@ Plot2D::YTicLog(QPainter* painter, QFontMetrics fontMetrics) {
                 iy = int(Pf.bottom + (log10(y)-ylmin)*yfact);
                 painter->setPen(gridPen);
                 painter->drawLine(QLine(int(Pf.left-5), iy, int(Pf.right), iy));
-                Label.sprintf("%7.0e", y);
-                ix0 = int(Pf.left - fontMetrics.width(Label) - 5);
+                Label = QString("%1").arg(y, 7, 'e', 0, ' ');
+                ix0 = int(Pf.left - fontMetrics.horizontalAdvance(Label) - 5);
                 iy0 = iy + fontMetrics.height()/2;
                 painter->setPen(labelPen);
                 painter->drawText(QPoint(ix0, iy0), Label);
@@ -623,7 +638,7 @@ Plot2D::DrawFrame(QPainter* painter, QFontMetrics fontMetrics) {
     painter->drawLine(QLine(int(Pf.left), int(Pf.top), int(Pf.left), int(Pf.bottom)));
 
     painter->setPen(labelPen);
-    int icx = fontMetrics.width((sTitle));
+    int icx = fontMetrics.horizontalAdvance((sTitle));
     painter->drawText(QPoint(int((width()-icx)/2), int(fontMetrics.height())), sTitle);
 }
 
@@ -634,8 +649,8 @@ Plot2D::DrawPlot(QPainter* painter, QFontMetrics fontMetrics) {
         SetLimits (Ax.XMin, Ax.XMax, Ax.YMin, Ax.YMax, Ax.AutoX, Ax.AutoY, Ax.LogX, Ax.LogY);
     }
 
-    Pf.left = fontMetrics.width("-0.00000") + 2.0;
-    Pf.right = width() - fontMetrics.width("x10-999") - 5.0;
+    Pf.left = fontMetrics.horizontalAdvance("-0.00000") + 2.0;
+    Pf.right = width() - fontMetrics.horizontalAdvance("x10-999") - 5.0;
     Pf.top = 2.0 * fontMetrics.height();
     Pf.bottom = height() - 3.0*fontMetrics.height();
 
@@ -742,9 +757,9 @@ Plot2D::DrawLastPoint(QPainter* painter, DataStream2D* pData) {
     }
     else {
         iy = int((Pf.bottom + (pData->m_pointArrayY[i] - Ax.YMin)*yfact));
-        if(ix<=Pf.right && ix>=Pf.left && iy>=Pf.top && iy<=Pf.bottom)
-            painter->drawPoint(ix, iy);
     }
+    if(ix<=Pf.right && ix>=Pf.left && iy>=Pf.top && iy<=Pf.bottom)
+        painter->drawPoint(ix, iy);
     return;
 }
 
