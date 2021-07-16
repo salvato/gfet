@@ -1,4 +1,4 @@
-/*
+﻿/*
  *
 Copyright (C) 2021  Gabriele Salvato
 
@@ -373,11 +373,14 @@ MainWindow::updateUserInterface() {
         ui->startIDSButton->setEnabled(true);
         ui->startRdsButton->setEnabled(true);
     }
+
     else if(presentMeasure == IdsVds_vs_Vg) {
         ui->statusGroupBox->setDisabled(true);
         ui->startIDSButton->setEnabled(true);
         ui->startRdsButton->setDisabled(true);
-    } else if(presentMeasure == Rds_vs_Vg) {
+    }
+
+    else if(presentMeasure == Rds_vs_Vg) {
         ui->statusGroupBox->setDisabled(true);
         ui->startIDSButton->setDisabled(true);
         ui->startRdsButton->setEnabled(true);
@@ -427,6 +430,24 @@ MainWindow::startI_VScan() {
     pIdsEvaluator->initVSweep(dStart, dStop, dStep, dDelayms, dCompliance);
     while(!pIdsEvaluator->isReadyForTrigger()) {}
     pIdsEvaluator->sendTrigger();
+    bMeasureInProgress = true;
+    ui->statusBar->showMessage("Sweeping...Please Wait");
+}
+
+
+void
+MainWindow::startRds_VgScan() {
+    double dStart = pConfigureDialog->pVgTab->dStart;
+    double dStop = pConfigureDialog->pVgTab->dStop;
+    int nSweepPoints = pConfigureDialog->pVgTab->iNSweepPoints;
+    double dStep = qAbs(dStop - dStart) / double(nSweepPoints);
+    double dDelayms = double(pConfigureDialog->pVgTab->iWaitTime);
+    double dCompliance = pConfigureDialog->pVgTab->dCompliance;
+    connect(pVgGenerator, SIGNAL(sweepDone(QDateTime,QString)),
+            this, SLOT(onVgSweepDone(QDateTime,QString)));
+    pVgGenerator->initVSweep(dStart, dStop, dStep, dDelayms, dCompliance);
+    while(!pVgGenerator->isReadyForTrigger()) {}
+    pVgGenerator->sendTrigger();
     bMeasureInProgress = true;
     ui->statusBar->showMessage("Sweeping...Please Wait");
 }
@@ -517,6 +538,7 @@ MainWindow::on_startIDSButton_clicked() {
 
     QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
 
+    presentMeasure = IdsVds_vs_Vg;
     // Initializing Ids Evaluator
     ui->statusBar->showMessage("Initializing Ids Evaluator...");
     if(pIdsEvaluator->init()) {
@@ -550,34 +572,48 @@ MainWindow::on_startIDSButton_clicked() {
     /// Ready to Start the Measure
     ////////////////////////////////
 
-    // Generate the first value of Vg...
-    currentVg = pConfigureDialog->pVgTab->dStart;
-    if(pVgGenerator) {
-        pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
-        while(!pVgGenerator->isReadyForTrigger()) {}
-        connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
-                this, SLOT(onNewVgGeneratorReading(QDateTime,QString)));
-        pVgGenerator->sendTrigger();
+    if(presentMeasure == IdsVds_vs_Vg) {
+        // Generate the first value of Vg...
+        currentVg = pConfigureDialog->pVgTab->dStart;
+        if(pVgGenerator) {
+            pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+            while(!pVgGenerator->isReadyForTrigger()) {}
+            connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
+                    this, SLOT(onNewVgGeneratorReading(QDateTime,QString)));
+            pVgGenerator->sendTrigger();
+        }
+        else {
+            // Configure Vg and press OK
+        }
+        currentStep = 1;
+        // Then Start the Ids vs Vds Scan
+        startI_VScan();
+        ui->startIDSButton->setText("Stop");
     }
-    else {
-        // Configure Vg and press OK
+    else if(presentMeasure == Rds_vs_Vg) {
+        currentVds = pConfigureDialog->pIdsTab->dStart;
+        pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
+        while(!pIdsEvaluator->isReadyForTrigger()) {}
+        connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
+                this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
+        pIdsEvaluator->sendTrigger();
+        currentStep = 1;
+        // Then Start the Rds vs Vg Scan
+        startRds_VgScan();
+        ui->startRdsButton->setText("Stop");
     }
-    currentStep = 1;
-    // Then Start the Ids vs Vds Scan
-    startI_VScan();
-
-    ui->startIDSButton->setText("Stop");
+    updateUserInterface();
 }
 
 
 void
-MainWindow::onNewVgGeneratorReading(QDateTime dateTime, QString sDataRead) {
-    Q_UNUSED(dateTime)
-    if(!DecodeReadings(sDataRead, &Ig, &Vg))
+MainWindow::onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead) {
+    Q_UNUSED(dataTime)
+    if(!DecodeReadings(sDataRead, &Ids, &Vds))
         return;
-    ui->currentEdit->setText(QString("%1").arg(Ig, 10, 'g', 4, ' '));
-    ui->voltageEdit->setText(QString("%1").arg(Vg, 10, 'g', 4, ' '));
-    QString sTitle = QString("Vg=%1").arg(Vg);
+    ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
+    ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
+    QString sTitle = QString("Vds=%1").arg(Vds);
     pPlotIdsVds->NewDataSet(currentStep,//Id
                                   3, //Pen Width
                                   Colors[currentStep % 7],
@@ -685,6 +721,20 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     pPlotIdsVds->UpdatePlot();
     // Start the new Ids vs Vds Scan
     startI_VScan();
+}
+
+
+void
+MainWindow::onVgSweepDone(QDateTime dataTime, QString sData) {
+    Q_UNUSED(dataTime)
+    Q_UNUSED(sData)
+}
+
+
+void
+MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime,QString sDataRead) {
+    Q_UNUSED(dataTime)
+    Q_UNUSED(sDataRead)
 }
 
 

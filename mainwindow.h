@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 
-//#define TEST_NO_INTERFACE
+#define TEST_NO_INTERFACE
 
 
 
@@ -60,6 +60,7 @@ protected:
     void saveSettings();
     void writeFileHeader();
     void startI_VScan();
+    void startRds_VgScan();
     void initPlot();
     void stopMeasure();
     bool prepareOutputFile(QString sBaseDir, QString sFileName, int currentStep);
@@ -73,10 +74,11 @@ private slots:
     void on_startIDSButton_clicked();
     void onComplianceEvent();
     void onClearComplianceEvent();
-    void onNewVgGeneratorReading(QDateTime dateTime, QString sDataRead);
+    void onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead);
+    void onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead);
     void onIdsSweepDone(QDateTime dataTime, QString sData);
+    void onVgSweepDone(QDateTime dataTime, QString sData);
     void on_comboIds_currentIndexChanged(int indx);
-
     void on_startRdsButton_clicked();
 
 public:
@@ -108,8 +110,11 @@ private:
     int              maxPlotPoints;
     bool             bMeasureInProgress;
     double           currentVg;
+    double           currentVds;
     double           Vg;
     double           Ig;
+    double           Vds;
+    double           Ids;
     int              currentStep;
 
     QString          sLogFileName;
