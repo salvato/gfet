@@ -57,7 +57,8 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
     , pLogFile(nullptr)
     , pIdsEvaluator(nullptr)
     , pVgGenerator(nullptr)
-    , pPlotMeasurements(nullptr)
+    , pPlotIdsVds(nullptr)
+    , pPlotRdsVg(nullptr)
     , pConfigureDialog(nullptr)
 {
     // Init internal variables
@@ -108,7 +109,7 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
 MainWindow::~MainWindow() {
     if(pIdsEvaluator     != nullptr) delete pIdsEvaluator;
     if(pVgGenerator      != nullptr) delete pVgGenerator;
-    if(pPlotMeasurements != nullptr) delete pPlotMeasurements;
+    if(pPlotIdsVds != nullptr) delete pPlotIdsVds;
     if(pConfigureDialog  != nullptr) delete pConfigureDialog;
     if(pOutputFile       != nullptr) delete pOutputFile;
     if(pLogFile          != nullptr) delete pLogFile;
@@ -426,7 +427,7 @@ MainWindow::stopMeasure() {
         pVgGenerator->disconnect();
         pVgGenerator->stopSweep();
     }
-    ui->startIDSButton->setText("Start Meas.");
+    ui->startIDSButton->setText("Ids-Vds (vs Vg)");
     QApplication::restoreOverrideCursor();
 }
 
@@ -463,16 +464,16 @@ MainWindow::prepareOutputFile(QString sBaseDir,
 
 void
 MainWindow::initPlot() {
-    if(pPlotMeasurements) delete pPlotMeasurements;
-    pPlotMeasurements = nullptr;
+    if(pPlotIdsVds) delete pPlotIdsVds;
+    pPlotIdsVds = nullptr;
     // Plot of Current vs Voltage
     sMeasurementPlotLabel = QString("Ids[A] vs Vds[V]");
-    pPlotMeasurements = new Plot2D(this, sMeasurementPlotLabel);
-    pPlotMeasurements->setWindowTitle(pConfigureDialog->pTabFile->sOutFileName);
-    pPlotMeasurements->setMaxPoints(maxPlotPoints);
-    pPlotMeasurements->SetLimits(0.0, 1.0, 0.0, 1.0, true, true, false, false);
-    pPlotMeasurements->UpdatePlot();
-    pPlotMeasurements->show();
+    pPlotIdsVds = new Plot2D(this, sMeasurementPlotLabel);
+    pPlotIdsVds->setWindowTitle(pConfigureDialog->pTabFile->sOutFileName);
+    pPlotIdsVds->setMaxPoints(maxPlotPoints);
+    pPlotIdsVds->SetLimits(0.0, 1.0, 0.0, 1.0, true, true, false, false);
+    pPlotIdsVds->UpdatePlot();
+    pPlotIdsVds->show();
 }
 
 
@@ -552,15 +553,15 @@ MainWindow::onNewVgGeneratorReading(QDateTime dateTime, QString sDataRead) {
     ui->currentEdit->setText(QString("%1").arg(Ig, 10, 'g', 4, ' '));
     ui->voltageEdit->setText(QString("%1").arg(Vg, 10, 'g', 4, ' '));
     QString sTitle = QString("Vg=%1").arg(Vg);
-    pPlotMeasurements->NewDataSet(currentStep,//Id
+    pPlotIdsVds->NewDataSet(currentStep,//Id
                                   3, //Pen Width
                                   Colors[currentStep % 7],
                                   Plot2D::iline,
                                   sTitle
                                   );
-    pPlotMeasurements->SetShowDataSet(currentStep, true);
-    pPlotMeasurements->SetShowTitle(currentStep, true);
-    pPlotMeasurements->UpdatePlot();
+    pPlotIdsVds->SetShowDataSet(currentStep, true);
+    pPlotIdsVds->SetShowTitle(currentStep, true);
+    pPlotIdsVds->UpdatePlot();
 }
 
 
@@ -626,9 +627,9 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
                 .arg(Vds,   12, 'g', 6, ' ')
                 .arg(Ids,   12, 'g', 6, ' ');
         pOutputFile->write(sData.toLocal8Bit());
-        pPlotMeasurements->NewPoint(currentStep, Vds, Ids);
+        pPlotIdsVds->NewPoint(currentStep, Vds, Ids);
     }
-    pPlotMeasurements->UpdatePlot();
+    pPlotIdsVds->UpdatePlot();
     pOutputFile->flush();
     pOutputFile->close();
     currentVg += pConfigureDialog->pVgTab->dStep;
@@ -648,15 +649,15 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     }
     QString sTitle = QString("Vg=%1").arg(currentVg);
     currentStep++;
-    pPlotMeasurements->NewDataSet(currentStep,//Id
+    pPlotIdsVds->NewDataSet(currentStep,//Id
                                   3, //Pen Width
                                   Colors[currentStep % 7],
                                   Plot2D::iline,
                                   sTitle
                                   );
-    pPlotMeasurements->SetShowDataSet(currentStep, true);
-    pPlotMeasurements->SetShowTitle(currentStep, true);
-    pPlotMeasurements->UpdatePlot();
+    pPlotIdsVds->SetShowDataSet(currentStep, true);
+    pPlotIdsVds->SetShowTitle(currentStep, true);
+    pPlotIdsVds->UpdatePlot();
     // Start the new Ids vs Vds Scan
     startI_VScan();
 }

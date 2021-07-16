@@ -84,7 +84,8 @@ private:
     QFile           *pLogFile;
     Keithley236     *pIdsEvaluator;
     Keithley236     *pVgGenerator;
-    Plot2D          *pPlotMeasurements;
+    Plot2D          *pPlotIdsVds;
+    Plot2D          *pPlotRdsVg;
     ConfigureDialog *pConfigureDialog;
 
     QString          sNormalStyle;
