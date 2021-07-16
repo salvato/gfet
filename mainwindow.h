@@ -77,6 +77,16 @@ private slots:
     void onIdsSweepDone(QDateTime dataTime, QString sData);
     void on_comboIds_currentIndexChanged(int indx);
 
+    void on_startRdsButton_clicked();
+
+public:
+    enum measure {
+        NoMeasure      = 0,
+        IdsVds_vs_Vg   = 1,
+        Rds_vs_Vg      = 2
+    };
+    measure presentMeasure;
+
 private:
     Ui::MainWindow *ui;
 

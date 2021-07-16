@@ -90,12 +90,16 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
     restoreState(settings.value("mainWindowState").toByteArray());
     restoreSettings();
+
     thread()->setPriority(QThread::TimeCriticalPriority);
+
 //    #ifdef TEST_NO_INTERFACE
 //        for(int i=0; i<2; i++) {
 //            ui->comboIds->addItem(QString("%1").arg(i+10));
 //        }
 //    #endif
+
+    // Some plot colors...
     Colors[0] = QColor(  0,   0, 255);
     Colors[1] = QColor(  0, 255,   0);
     Colors[2] = QColor(  0, 255, 255);
@@ -103,6 +107,8 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
     Colors[4] = QColor(255,   0, 255);
     Colors[5] = QColor(255, 255,   0);
     Colors[6] = QColor(255, 255, 255);
+
+    presentMeasure = NoMeasure;
 }
 
 
@@ -427,7 +433,12 @@ MainWindow::stopMeasure() {
         pVgGenerator->disconnect();
         pVgGenerator->stopSweep();
     }
-    ui->startIDSButton->setText("Ids-Vds (vs Vg)");
+    if(presentMeasure == IdsVds_vs_Vg)
+        ui->startIDSButton->setText("Ids-Vds (vs Vg)");
+    else
+        ui->startRdsButton->setText("Rds (vs Vg)");
+    presentMeasure = NoMeasure;
+    updateUserInterface();
     QApplication::restoreOverrideCursor();
 }
 
@@ -688,4 +699,22 @@ MainWindow::on_comboIds_currentIndexChanged(int indx) {
         connect(pVgGenerator, SIGNAL(sendMessage(QString)),
                 this, SLOT(onLogMessage(QString)));
     }
+}
+
+
+void
+MainWindow::on_startRdsButton_clicked() {
+    if(ui->startRdsButton->text().contains("Stop")) {
+        stopMeasure();
+        ui->statusBar->showMessage("Measure Stopped");
+        return;
+    }
+    //else
+    if(pConfigureDialog) delete pConfigureDialog;
+    pConfigureDialog = new ConfigureDialog(this);
+    if(pConfigureDialog->exec() == QDialog::Rejected)
+        return;
+
+    QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
+
 }
