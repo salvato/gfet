@@ -67,6 +67,7 @@ INCLUDEPATH += /usr/local/include
 
 
 DISTFILES += doc/linux_Gpib_HowTo.txt \
+    .gitignore \
     .gitignore
 DISTFILES += LICENSE
 DISTFILES += README.md
