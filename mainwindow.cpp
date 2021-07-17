@@ -583,11 +583,11 @@ MainWindow::onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead) {
     ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
     QString sTitle = QString("Vds=%1").arg(Vds);
     pPlotIdsVds->NewDataSet(currentStep,//Id
-                                  3, //Pen Width
-                                  Colors[currentStep % 7],
-                                  Plot2D::iline,
-                                  sTitle
-                                  );
+                            3, //Pen Width
+                            Colors[currentStep % 7],
+                            Plot2D::iline,
+                            sTitle
+                            );
     pPlotIdsVds->SetShowDataSet(currentStep, true);
     pPlotIdsVds->SetShowTitle(currentStep, true);
     pPlotIdsVds->UpdatePlot();
@@ -693,13 +693,6 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
 
 
 void
-MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime,QString sDataRead) {
-    Q_UNUSED(dataTime)
-    Q_UNUSED(sDataRead)
-}
-
-
-void
 MainWindow::onLogMessage(QString sMessage) {
     logMessage(sMessage);
 }
@@ -754,6 +747,16 @@ MainWindow::on_startRdsButton_clicked() {
     connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
             this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
     currentStep = 1;
+    QString sTitle = QString("Vds=%1").arg(currentVds);
+    pPlotIdsVds->NewDataSet(currentStep,//Id
+                            3, //Pen Width
+                            Colors[currentStep % 7],
+                            Plot2D::iline,
+                            sTitle
+                            );
+    pPlotIdsVds->SetShowDataSet(currentStep, true);
+    pPlotIdsVds->SetShowTitle(currentStep, true);
+    pPlotIdsVds->UpdatePlot();
     pVgGenerator->sendTrigger();
 }
 
@@ -761,8 +764,19 @@ MainWindow::on_startRdsButton_clicked() {
 void
 MainWindow::onNewVgGenerated(QDateTime dataTime, QString sDataRead) {
     Q_UNUSED(dataTime)
-    if(!DecodeReadings(sDataRead, &Ids, &Vds))
+    if(!DecodeReadings(sDataRead, &Ig, &Vg))
         return;
     while(!pIdsEvaluator->isReadyForTrigger()) {}
     pIdsEvaluator->sendTrigger();
 }
+
+
+void
+MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead) {
+    Q_UNUSED(dataTime)
+    if(!DecodeReadings(sDataRead, &Ids, &Vds))
+        return;
+    ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
+    ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
+}
+
