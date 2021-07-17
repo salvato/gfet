@@ -743,16 +743,26 @@ MainWindow::on_startRdsButton_clicked() {
     QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
     presentMeasure = Rds_vs_Vg;
 
+    currentVg  = pConfigureDialog->pVgTab->dStart;
     currentVds = pConfigureDialog->pIdsTab->dStart;
+    pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
     pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
-    while(!pIdsEvaluator->isReadyForTrigger()) {}
+
+    while(!pVgGenerator->isReadyForTrigger()) {}
+    connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
+            this, SLOT(onNewVgGenerated(QDateTime,QString)));
     connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
             this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
-    pIdsEvaluator->sendTrigger();
     currentStep = 1;
-    // Then Start the Rds vs Vg Scan
-    startRds_VgScan();
-    ui->startRdsButton->setText("Stop");
+    pVgGenerator->sendTrigger();
+}
 
-    updateUserInterface();
+
+void
+MainWindow::onNewVgGenerated(QDateTime dataTime, QString sDataRead) {
+    Q_UNUSED(dataTime)
+    if(!DecodeReadings(sDataRead, &Ids, &Vds))
+        return;
+    while(!pIdsEvaluator->isReadyForTrigger()) {}
+    pIdsEvaluator->sendTrigger();
 }
