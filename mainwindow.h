@@ -60,7 +60,6 @@ protected:
     void saveSettings();
     void writeFileHeader();
     void startI_VScan();
-    void startRds_VgScan();
     void initPlot();
     void stopMeasure();
     bool prepareOutputFile(QString sBaseDir, QString sFileName, int currentStep);
@@ -77,7 +76,6 @@ private slots:
     void onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead);
     void onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead);
     void onIdsSweepDone(QDateTime dataTime, QString sData);
-    void onVgSweepDone(QDateTime dataTime, QString sData);
     void on_comboIds_currentIndexChanged(int indx);
     void on_startRdsButton_clicked();
 

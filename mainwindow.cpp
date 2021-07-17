@@ -436,24 +436,6 @@ MainWindow::startI_VScan() {
 
 
 void
-MainWindow::startRds_VgScan() {
-    double dStart = pConfigureDialog->pVgTab->dStart;
-    double dStop = pConfigureDialog->pVgTab->dStop;
-    int nSweepPoints = pConfigureDialog->pVgTab->iNSweepPoints;
-    double dStep = qAbs(dStop - dStart) / double(nSweepPoints);
-    double dDelayms = double(pConfigureDialog->pVgTab->iWaitTime);
-    double dCompliance = pConfigureDialog->pVgTab->dCompliance;
-    connect(pVgGenerator, SIGNAL(sweepDone(QDateTime,QString)),
-            this, SLOT(onVgSweepDone(QDateTime,QString)));
-    pVgGenerator->initVSweep(dStart, dStop, dStep, dDelayms, dCompliance);
-    while(!pVgGenerator->isReadyForTrigger()) {}
-    pVgGenerator->sendTrigger();
-    bMeasureInProgress = true;
-    ui->statusBar->showMessage("Sweeping...Please Wait");
-}
-
-
-void
 MainWindow::stopMeasure() {
     if(pOutputFile) {
         pOutputFile->close();
@@ -572,36 +554,22 @@ MainWindow::on_startIDSButton_clicked() {
     /// Ready to Start the Measure
     ////////////////////////////////
 
-    if(presentMeasure == IdsVds_vs_Vg) {
-        // Generate the first value of Vg...
-        currentVg = pConfigureDialog->pVgTab->dStart;
-        if(pVgGenerator) {
-            pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
-            while(!pVgGenerator->isReadyForTrigger()) {}
-            connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
-                    this, SLOT(onNewVgGeneratorReading(QDateTime,QString)));
-            pVgGenerator->sendTrigger();
-        }
-        else {
-            // Configure Vg and press OK
-        }
-        currentStep = 1;
-        // Then Start the Ids vs Vds Scan
-        startI_VScan();
-        ui->startIDSButton->setText("Stop");
+    // Generate the first value of Vg...
+    currentVg = pConfigureDialog->pVgTab->dStart;
+    if(pVgGenerator) {
+        pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+        while(!pVgGenerator->isReadyForTrigger()) {}
+        connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
+                this, SLOT(onNewVgGeneratorReading(QDateTime,QString)));
+        pVgGenerator->sendTrigger();
     }
-    else if(presentMeasure == Rds_vs_Vg) {
-        currentVds = pConfigureDialog->pIdsTab->dStart;
-        pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
-        while(!pIdsEvaluator->isReadyForTrigger()) {}
-        connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
-                this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
-        pIdsEvaluator->sendTrigger();
-        currentStep = 1;
-        // Then Start the Rds vs Vg Scan
-        startRds_VgScan();
-        ui->startRdsButton->setText("Stop");
+    else {
+        // Configure Vg and press OK
     }
+    currentStep = 1;
+    // Then Start the Ids vs Vds Scan
+    startI_VScan();
+    ui->startIDSButton->setText("Stop");
     updateUserInterface();
 }
 
@@ -725,13 +693,6 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
 
 
 void
-MainWindow::onVgSweepDone(QDateTime dataTime, QString sData) {
-    Q_UNUSED(dataTime)
-    Q_UNUSED(sData)
-}
-
-
-void
 MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime,QString sDataRead) {
     Q_UNUSED(dataTime)
     Q_UNUSED(sDataRead)
@@ -780,5 +741,18 @@ MainWindow::on_startRdsButton_clicked() {
         return;
 
     QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
+    presentMeasure = Rds_vs_Vg;
 
+    currentVds = pConfigureDialog->pIdsTab->dStart;
+    pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
+    while(!pIdsEvaluator->isReadyForTrigger()) {}
+    connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
+            this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
+    pIdsEvaluator->sendTrigger();
+    currentStep = 1;
+    // Then Start the Rds vs Vg Scan
+    startRds_VgScan();
+    ui->startRdsButton->setText("Stop");
+
+    updateUserInterface();
 }
