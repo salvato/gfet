@@ -24,6 +24,7 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
+    fake236.cpp \
     idstab.cpp \
     vgtab.cpp
 SOURCES += mainwindow.cpp
@@ -42,6 +43,7 @@ SOURCES += plotpropertiesdlg.cpp
 
 
 HEADERS += mainwindow.h \
+    fake236.h \
     idstab.h \
     vgtab.h
 HEADERS += axesdialog.h
