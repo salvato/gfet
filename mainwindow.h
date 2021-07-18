@@ -73,7 +73,7 @@ private slots:
     void on_startIDSButton_clicked();
     void onComplianceEvent();
     void onClearComplianceEvent();
-    void onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead);
+    void onNewVgReading(QDateTime dataTime, QString sDataRead);
     void onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead);
     void onNewVgGenerated(QDateTime dataTime, QString sDataRead);
     void onIdsSweepDone(QDateTime dataTime, QString sData);

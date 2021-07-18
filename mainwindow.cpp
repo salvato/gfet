@@ -45,8 +45,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStandardPaths>
 #include <QDebug>
 
+
 //#define MY_DEBUG
-#define MAXTIMINGS 83
 
 
 
@@ -420,6 +420,19 @@ MainWindow::writeFileHeader() {
 }
 
 
+bool
+MainWindow::DecodeReadings(QString sDataRead, double *current, double *voltage) { // Decode readings
+    QStringList sMeasures = QStringList(sDataRead.split(",", Qt::SkipEmptyParts));
+    if(sMeasures.count() < 2) {
+        logMessage("Measurement Format Error");
+        return false;
+    }
+    *current = sMeasures.at(1).toDouble();
+    *voltage = sMeasures.at(0).toDouble();
+    return true;
+}
+
+
 void
 MainWindow::startI_VSweep() {
     double dStart = pConfigureDialog->pIdsTab->dStart;
@@ -552,22 +565,17 @@ MainWindow::on_startIDSButton_clicked() {
     // Init the Plots
     initPlot();
 
-    ////////////////////////////////
-    /// Ready to Start the Measure
-    ////////////////////////////////
+    /////////////////////////////////////////////
+    /// Ready to Start the IdsVds_vs_Vg Measure
+    /////////////////////////////////////////////
 
     // Generate the first value of Vg...
     currentVg = pConfigureDialog->pVgTab->dStart;
-    if(pVgGenerator) {
-        pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
-        while(!pVgGenerator->isReadyForTrigger()) {}
-        connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
-                this, SLOT(onNewVgGeneratorReading(QDateTime,QString)));
-        pVgGenerator->sendTrigger();
-    }
-    else {
-        // Configure Vg and press OK
-    }
+    pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+    while(!pVgGenerator->isReadyForTrigger()) {}
+    connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
+            this, SLOT(onNewVgReading(QDateTime,QString)));
+    pVgGenerator->sendTrigger();
     currentStep = 1;
     // Then Start the Ids vs Vds Sweep
     startI_VSweep();
@@ -577,13 +585,36 @@ MainWindow::on_startIDSButton_clicked() {
 
 
 void
-MainWindow::onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead) {
-    Q_UNUSED(dataTime)
-    if(!DecodeReadings(sDataRead, &Ids, &Vds))
+MainWindow::on_startRdsButton_clicked() {
+    if(ui->startRdsButton->text().contains("Stop")) {
+        stopMeasure();
+        ui->statusBar->showMessage("Measure Stopped");
         return;
-    ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
-    ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
-    QString sTitle = QString("Vds=%1").arg(Vds);
+    }
+
+    //else (New Rds vs Vg Measure Starting...)
+
+    // Get Measurement Configuration
+    if(pConfigureDialog) delete pConfigureDialog;
+    pConfigureDialog = new ConfigureDialog(this);
+    if(pConfigureDialog->exec() == QDialog::Rejected)
+        return;
+
+    QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
+    presentMeasure = Rds_vs_Vg;
+
+    currentVg  = pConfigureDialog->pVgTab->dStart;
+    currentVds = pConfigureDialog->pIdsTab->dStart;
+    pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+    pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
+
+    while(!pVgGenerator->isReadyForTrigger()) {}
+    connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
+            this, SLOT(onNewVgGenerated(QDateTime,QString)));
+    connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
+            this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
+    currentStep = 1;
+    QString sTitle = QString("Vds=%1").arg(currentVds);
     pPlot->NewDataSet(currentStep,//Id
                       3, //Pen Width
                       Colors[currentStep % 7],
@@ -593,6 +624,7 @@ MainWindow::onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead) {
     pPlot->SetShowDataSet(currentStep, true);
     pPlot->SetShowTitle(currentStep, true);
     pPlot->UpdatePlot();
+    pVgGenerator->sendTrigger();
 }
 
 
@@ -611,16 +643,23 @@ MainWindow::onClearComplianceEvent() {
 }
 
 
-bool
-MainWindow::DecodeReadings(QString sDataRead, double *current, double *voltage) { // Decode readings
-    QStringList sMeasures = QStringList(sDataRead.split(",", Qt::SkipEmptyParts));
-    if(sMeasures.count() < 2) {
-        logMessage("Measurement Format Error");
-        return false;
-    }
-    *current = sMeasures.at(1).toDouble();
-    *voltage = sMeasures.at(0).toDouble();
-    return true;
+void
+MainWindow::onNewVgReading(QDateTime dataTime, QString sDataRead) {
+    Q_UNUSED(dataTime)
+    if(!DecodeReadings(sDataRead, &Ids, &Vds))
+        return;
+    ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
+    ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
+    QString sTitle = QString("Vds=%1").arg(Vds);
+    pPlot->NewDataSet(currentStep,//Id
+                      3, //Pen Width
+                      Colors[currentStep % 7],
+                      Plot2D::iline,
+                      sTitle
+                      );
+    pPlot->SetShowDataSet(currentStep, true);
+    pPlot->SetShowTitle(currentStep, true);
+    pPlot->UpdatePlot();
 }
 
 
@@ -718,50 +757,6 @@ MainWindow::on_comboIds_currentIndexChanged(int indx) {
         connect(pVgGenerator, SIGNAL(sendMessage(QString)),
                 this, SLOT(onLogMessage(QString)));
     }
-}
-
-
-void
-MainWindow::on_startRdsButton_clicked() {
-    if(ui->startRdsButton->text().contains("Stop")) {
-        stopMeasure();
-        ui->statusBar->showMessage("Measure Stopped");
-        return;
-    }
-
-    //else (New Rds vs Vg Measure Starting...)
-
-    // Get Measurement Configuration
-    if(pConfigureDialog) delete pConfigureDialog;
-    pConfigureDialog = new ConfigureDialog(this);
-    if(pConfigureDialog->exec() == QDialog::Rejected)
-        return;
-
-    QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
-    presentMeasure = Rds_vs_Vg;
-
-    currentVg  = pConfigureDialog->pVgTab->dStart;
-    currentVds = pConfigureDialog->pIdsTab->dStart;
-    pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
-    pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
-
-    while(!pVgGenerator->isReadyForTrigger()) {}
-    connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
-            this, SLOT(onNewVgGenerated(QDateTime,QString)));
-    connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
-            this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
-    currentStep = 1;
-    QString sTitle = QString("Vds=%1").arg(currentVds);
-    pPlot->NewDataSet(currentStep,//Id
-                      3, //Pen Width
-                      Colors[currentStep % 7],
-                      Plot2D::iline,
-                      sTitle
-                      );
-    pPlot->SetShowDataSet(currentStep, true);
-    pPlot->SetShowTitle(currentStep, true);
-    pPlot->UpdatePlot();
-    pVgGenerator->sendTrigger();
 }
 
 
