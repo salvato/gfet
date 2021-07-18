@@ -220,10 +220,6 @@ Fake236::sendTrigger() {
 void
 Fake236::checkNotify() {
 #if defined(Q_OS_LINUX)
-    ibrsp(gpibId, &spollByte);
-    if(isGpibError(QString(Q_FUNC_INFO) + "ibrsp() Error"))
-    if(!(spollByte & 64))
-        return; // SRQ not enabled
     onGpibCallback(gpibId, uint(ThreadIbsta()), uint(ThreadIberr()), ThreadIbcnt());
 #endif
 }

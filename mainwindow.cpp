@@ -651,10 +651,10 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
         Vds = sMeasures.at(i).toDouble();
         Ids = sMeasures.at(i+1).toDouble();
         QString sData = QString("%1 %2 %3 %4\n")
-                .arg(Vg, 12, 'g', 6, ' ')
-                .arg(Ig, 12, 'g', 6, ' ')
-                .arg(Vds,   12, 'g', 6, ' ')
-                .arg(Ids,   12, 'g', 6, ' ');
+                .arg(Vg,  12, 'g', 6, ' ')
+                .arg(Ig,  12, 'g', 6, ' ')
+                .arg(Vds, 12, 'g', 6, ' ')
+                .arg(Ids, 12, 'g', 6, ' ');
         pOutputFile->write(sData.toLocal8Bit());
         pPlotIdsVds->NewPoint(currentStep, Vds, Ids);
     }
@@ -778,5 +778,67 @@ MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead) {
         return;
     ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
     ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
+
+    // Salvo il dato su file
+    QString sData = QString("%1 %2 %3 %4\n")
+            .arg(Vg,  12, 'g', 6, ' ')
+            .arg(Ig,  12, 'g', 6, ' ')
+            .arg(Vds, 12, 'g', 6, ' ')
+            .arg(Ids, 12, 'g', 6, ' ');
+    pOutputFile->write(sData.toLocal8Bit());
+    pOutputFile->flush();
+
+    // Plotto il dato
+    pPlotRdsVg->NewPoint(currentStep, Vg, Vds/Ids);
+    pPlotIdsVds->UpdatePlot();
+
+    // New Vg Step (if still inside the requested interval)
+    currentVg += pConfigureDialog->pVgTab->dStep;
+
+    if((currentVg <= qMax(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) &&
+       (currentVg >= qMin(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) )
+    { // Vg inside the requested interval
+        pVgGenerator->sendTrigger();
+    }
+    else { // Vg outside the requested interval
+        // New Vds Step (if still inside the requested interval)
+        currentVds += pConfigureDialog->pIdsTab->dStep;
+        if((currentVds <= qMax(pConfigureDialog->pIdsTab->dStop, pConfigureDialog->pIdsTab->dStart)) &&
+           (currentVds >= qMin(pConfigureDialog->pIdsTab->dStop, pConfigureDialog->pIdsTab->dStart)) )
+        { // Vds inside the requested interval
+            pOutputFile->close();
+            currentStep++;
+            // Open the Output file
+            ui->statusBar->showMessage("Opening Output file...");
+            if(!prepareOutputFile(pConfigureDialog->pTabFile->sBaseDir,
+                                  pConfigureDialog->pTabFile->sOutFileName,
+                                  currentStep))
+            {
+                stopMeasure();
+                return;
+            }
+            // Write File Header
+            writeFileHeader();
+
+            // Create New Plot Data Set
+            QString sTitle = QString("Vds=%1").arg(currentVds);
+            pPlotIdsVds->NewDataSet(currentStep,//Id
+                                    3, //Pen Width
+                                    Colors[currentStep % 7],
+                                    Plot2D::iline,
+                                    sTitle
+                                    );
+            pPlotIdsVds->SetShowDataSet(currentStep, true);
+            pPlotIdsVds->SetShowTitle(currentStep, true);
+            pPlotIdsVds->UpdatePlot();
+
+            // Start with Vg initial value
+            currentVg = pConfigureDialog->pVgTab->dStart;
+            pVgGenerator->sendTrigger();
+        }  // Vds inside the requested interval
+        else { // Vds esterno all'intervallo richiesto
+            stopMeasure(); // Close Output File and update UI
+        }
+    } // Vg outside the requested interval
 }
 
