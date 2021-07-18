@@ -434,7 +434,7 @@ MainWindow::DecodeReadings(QString sDataRead, double *current, double *voltage) 
 
 
 void
-MainWindow::startI_VSweep() {
+MainWindow::startVdsSweep() {
     double dStart = pConfigureDialog->pIdsTab->dStart;
     double dStop = pConfigureDialog->pIdsTab->dStop;
     int nSweepPoints = pConfigureDialog->pIdsTab->iNSweepPoints;
@@ -578,7 +578,7 @@ MainWindow::on_startIDSButton_clicked() {
     pVgGenerator->sendTrigger();
     currentStep = 1;
     // Then Start the Ids vs Vds Sweep
-    startI_VSweep();
+    startVdsSweep();
     ui->startIDSButton->setText("Stop");
     updateUserInterface();
 }
@@ -728,7 +728,7 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     pPlot->SetShowTitle(currentStep, true);
     pPlot->UpdatePlot();
     // Start the new Ids vs Vds Scan
-    startI_VSweep();
+    startVdsSweep();
 }
 
 

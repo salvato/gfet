@@ -59,7 +59,7 @@ protected:
     void restoreSettings();
     void saveSettings();
     void writeFileHeader();
-    void startI_VSweep();
+    void startVdsSweep();
     void initPlot();
     void stopMeasure();
     bool prepareOutputFile(QString sBaseDir, QString sFileName, int currentStep);
