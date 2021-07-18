@@ -59,7 +59,7 @@ protected:
     void restoreSettings();
     void saveSettings();
     void writeFileHeader();
-    void startI_VScan();
+    void startI_VSweep();
     void initPlot();
     void stopMeasure();
     bool prepareOutputFile(QString sBaseDir, QString sFileName, int currentStep);
@@ -95,8 +95,7 @@ private:
     QFile           *pLogFile;
     Keithley236     *pIdsEvaluator;
     Keithley236     *pVgGenerator;
-    Plot2D          *pPlotIdsVds;
-    Plot2D          *pPlotRdsVg;
+    Plot2D          *pPlot;
     ConfigureDialog *pConfigureDialog;
 
     QString          sNormalStyle;

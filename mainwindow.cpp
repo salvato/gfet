@@ -57,8 +57,7 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
     , pLogFile(nullptr)
     , pIdsEvaluator(nullptr)
     , pVgGenerator(nullptr)
-    , pPlotIdsVds(nullptr)
-    , pPlotRdsVg(nullptr)
+    , pPlot(nullptr)
     , pConfigureDialog(nullptr)
 {
     // Init internal variables
@@ -113,12 +112,12 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
 
 
 MainWindow::~MainWindow() {
-    if(pIdsEvaluator     != nullptr) delete pIdsEvaluator;
-    if(pVgGenerator      != nullptr) delete pVgGenerator;
-    if(pPlotIdsVds != nullptr) delete pPlotIdsVds;
-    if(pConfigureDialog  != nullptr) delete pConfigureDialog;
-    if(pOutputFile       != nullptr) delete pOutputFile;
-    if(pLogFile          != nullptr) delete pLogFile;
+    if(pIdsEvaluator)    delete pIdsEvaluator;
+    if(pVgGenerator)     delete pVgGenerator;
+    if(pPlot)            delete pPlot;
+    if(pConfigureDialog) delete pConfigureDialog;
+    if(pOutputFile)      delete pOutputFile;
+    if(pLogFile)         delete pLogFile;
     delete ui;
 }
 
@@ -148,9 +147,9 @@ MainWindow::closeEvent(QCloseEvent *event) {
         }
     }
     if(pIdsEvaluator) delete pIdsEvaluator;
-    if(pVgGenerator) delete pVgGenerator;
+    if(pVgGenerator)  delete pVgGenerator;
     pIdsEvaluator = nullptr;
-    pVgGenerator = nullptr;
+    pVgGenerator  = nullptr;
 
     if(pLogFile) {
         if(pLogFile->isOpen()) {
@@ -238,6 +237,9 @@ MainWindow::criticalError(QString sWhere, QString sText, QString sInfText) {
 }
 
 
+/////////////////////////////////////////////
+////////////////////////////// To be modified
+/////////////////////////////////////////////
 bool
 MainWindow::checkInstruments() {
     if(pIdsEvaluator != nullptr) delete pIdsEvaluator;
@@ -387,6 +389,7 @@ MainWindow::updateUserInterface() {
     }
 }
 
+
 /////////////////////////////////////////////
 ////////////////////////////// To be modified
 /////////////////////////////////////////////
@@ -418,7 +421,7 @@ MainWindow::writeFileHeader() {
 
 
 void
-MainWindow::startI_VScan() {
+MainWindow::startI_VSweep() {
     double dStart = pConfigureDialog->pIdsTab->dStart;
     double dStop = pConfigureDialog->pIdsTab->dStop;
     int nSweepPoints = pConfigureDialog->pIdsTab->iNSweepPoints;
@@ -492,16 +495,15 @@ MainWindow::prepareOutputFile(QString sBaseDir,
 
 void
 MainWindow::initPlot() {
-    if(pPlotIdsVds) delete pPlotIdsVds;
-    pPlotIdsVds = nullptr;
-    // Plot of Current vs Voltage
-    sMeasurementPlotLabel = QString("Ids[A] vs Vds[V]");
-    pPlotIdsVds = new Plot2D(this, sMeasurementPlotLabel);
-    pPlotIdsVds->setWindowTitle(pConfigureDialog->pTabFile->sOutFileName);
-    pPlotIdsVds->setMaxPoints(maxPlotPoints);
-    pPlotIdsVds->SetLimits(0.0, 1.0, 0.0, 1.0, true, true, false, false);
-    pPlotIdsVds->UpdatePlot();
-    pPlotIdsVds->show();
+    if(pPlot) delete pPlot;
+    pPlot = nullptr;
+    sMeasurementPlotLabel = QString("Plot Window");
+    pPlot = new Plot2D(this, sMeasurementPlotLabel);
+    pPlot->setWindowTitle(pConfigureDialog->pTabFile->sOutFileName);
+    pPlot->setMaxPoints(maxPlotPoints);
+    pPlot->SetLimits(0.0, 1.0, 0.0, 1.0, true, true, false, false);
+    pPlot->UpdatePlot();
+    pPlot->show();
 }
 
 
@@ -567,8 +569,8 @@ MainWindow::on_startIDSButton_clicked() {
         // Configure Vg and press OK
     }
     currentStep = 1;
-    // Then Start the Ids vs Vds Scan
-    startI_VScan();
+    // Then Start the Ids vs Vds Sweep
+    startI_VSweep();
     ui->startIDSButton->setText("Stop");
     updateUserInterface();
 }
@@ -582,15 +584,15 @@ MainWindow::onNewVgGeneratorReading(QDateTime dataTime, QString sDataRead) {
     ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
     ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
     QString sTitle = QString("Vds=%1").arg(Vds);
-    pPlotIdsVds->NewDataSet(currentStep,//Id
-                            3, //Pen Width
-                            Colors[currentStep % 7],
-                            Plot2D::iline,
-                            sTitle
-                            );
-    pPlotIdsVds->SetShowDataSet(currentStep, true);
-    pPlotIdsVds->SetShowTitle(currentStep, true);
-    pPlotIdsVds->UpdatePlot();
+    pPlot->NewDataSet(currentStep,//Id
+                      3, //Pen Width
+                      Colors[currentStep % 7],
+                      Plot2D::iline,
+                      sTitle
+                      );
+    pPlot->SetShowDataSet(currentStep, true);
+    pPlot->SetShowTitle(currentStep, true);
+    pPlot->UpdatePlot();
 }
 
 
@@ -656,39 +658,38 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
                 .arg(Vds, 12, 'g', 6, ' ')
                 .arg(Ids, 12, 'g', 6, ' ');
         pOutputFile->write(sData.toLocal8Bit());
-        pPlotIdsVds->NewPoint(currentStep, Vds, Ids);
+        pPlot->NewPoint(currentStep, Vds, Ids);
     }
-    pPlotIdsVds->UpdatePlot();
+    pPlot->UpdatePlot();
     pOutputFile->flush();
     pOutputFile->close();
+    // Do we have anoter Vg step to execute ?
     currentVg += pConfigureDialog->pVgTab->dStep;
-    if(currentVg > pConfigureDialog->pVgTab->dStop) {
+    if((currentVg > qMax(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) &&
+       (currentVg < qMin(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) )
+    { // No ! all Vg steps have been executed
         stopMeasure();
         ui->statusBar->showMessage("Measure Done");
         onClearComplianceEvent();
         return;
     }
-    if(pVgGenerator) {
-        pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
-        while(!pVgGenerator->isReadyForTrigger()) {}
-        pVgGenerator->sendTrigger();
-    }
-    else {
-        // Configure Vg and press OK
-    }
+    // else we have anoter Vg step to execute
+    pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+    while(!pVgGenerator->isReadyForTrigger()) {}
+    pVgGenerator->sendTrigger();
     QString sTitle = QString("Vg=%1").arg(currentVg);
     currentStep++;
-    pPlotIdsVds->NewDataSet(currentStep,//Id
-                                  3, //Pen Width
-                                  Colors[currentStep % 7],
-                                  Plot2D::iline,
-                                  sTitle
-                                  );
-    pPlotIdsVds->SetShowDataSet(currentStep, true);
-    pPlotIdsVds->SetShowTitle(currentStep, true);
-    pPlotIdsVds->UpdatePlot();
+    pPlot->NewDataSet(currentStep,//Id
+                      3, //Pen Width
+                      Colors[currentStep % 7],
+                      Plot2D::iline,
+                      sTitle
+                      );
+    pPlot->SetShowDataSet(currentStep, true);
+    pPlot->SetShowTitle(currentStep, true);
+    pPlot->UpdatePlot();
     // Start the new Ids vs Vds Scan
-    startI_VScan();
+    startI_VSweep();
 }
 
 
@@ -727,7 +728,10 @@ MainWindow::on_startRdsButton_clicked() {
         ui->statusBar->showMessage("Measure Stopped");
         return;
     }
-    //else
+
+    //else (New Rds vs Vg Measure Starting...)
+
+    // Get Measurement Configuration
     if(pConfigureDialog) delete pConfigureDialog;
     pConfigureDialog = new ConfigureDialog(this);
     if(pConfigureDialog->exec() == QDialog::Rejected)
@@ -748,15 +752,15 @@ MainWindow::on_startRdsButton_clicked() {
             this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
     currentStep = 1;
     QString sTitle = QString("Vds=%1").arg(currentVds);
-    pPlotIdsVds->NewDataSet(currentStep,//Id
-                            3, //Pen Width
-                            Colors[currentStep % 7],
-                            Plot2D::iline,
-                            sTitle
-                            );
-    pPlotIdsVds->SetShowDataSet(currentStep, true);
-    pPlotIdsVds->SetShowTitle(currentStep, true);
-    pPlotIdsVds->UpdatePlot();
+    pPlot->NewDataSet(currentStep,//Id
+                      3, //Pen Width
+                      Colors[currentStep % 7],
+                      Plot2D::iline,
+                      sTitle
+                      );
+    pPlot->SetShowDataSet(currentStep, true);
+    pPlot->SetShowTitle(currentStep, true);
+    pPlot->UpdatePlot();
     pVgGenerator->sendTrigger();
 }
 
@@ -789,8 +793,8 @@ MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead) {
     pOutputFile->flush();
 
     // Plotto il dato
-    pPlotRdsVg->NewPoint(currentStep, Vg, Vds/Ids);
-    pPlotIdsVds->UpdatePlot();
+    pPlot->NewPoint(currentStep, Vg, Vds/Ids);
+    pPlot->UpdatePlot();
 
     // New Vg Step (if still inside the requested interval)
     currentVg += pConfigureDialog->pVgTab->dStep;
@@ -798,6 +802,8 @@ MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead) {
     if((currentVg <= qMax(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) &&
        (currentVg >= qMin(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) )
     { // Vg inside the requested interval
+        pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+        while(!pVgGenerator->isReadyForTrigger()) {}
         pVgGenerator->sendTrigger();
     }
     else { // Vg outside the requested interval
@@ -822,20 +828,25 @@ MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead) {
 
             // Create New Plot Data Set
             QString sTitle = QString("Vds=%1").arg(currentVds);
-            pPlotIdsVds->NewDataSet(currentStep,//Id
-                                    3, //Pen Width
-                                    Colors[currentStep % 7],
-                                    Plot2D::iline,
-                                    sTitle
-                                    );
-            pPlotIdsVds->SetShowDataSet(currentStep, true);
-            pPlotIdsVds->SetShowTitle(currentStep, true);
-            pPlotIdsVds->UpdatePlot();
+            pPlot->NewDataSet(currentStep,//Id
+                              3, //Pen Width
+                              Colors[currentStep % 7],
+                              Plot2D::iline,
+                              sTitle
+                              );
+            pPlot->SetShowDataSet(currentStep, true);
+            pPlot->SetShowTitle(currentStep, true);
+            pPlot->UpdatePlot();
 
-            // Start with Vg initial value
+            // Start with Vds and Vg initial values
+            currentVds = pConfigureDialog->pIdsTab->dStart;
+            pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
             currentVg = pConfigureDialog->pVgTab->dStart;
+            pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+            while(!pVgGenerator->isReadyForTrigger()) {}
             pVgGenerator->sendTrigger();
         }  // Vds inside the requested interval
+
         else { // Vds esterno all'intervallo richiesto
             stopMeasure(); // Close Output File and update UI
         }

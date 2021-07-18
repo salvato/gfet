@@ -168,8 +168,7 @@ Keithley236::initSourceV(double dAppliedVoltage, double dCompliance) {
     int iScale = 0;
     if(dAppliedVoltage == 0.0)
         iScale = 1;
-    else
-        sCommand = QString("L%1,%2X").arg(dCompliance).arg(iScale);
+    sCommand = QString("L%1,%2X").arg(dCompliance).arg(iScale);
     iErr |= gpibWrite(gpibId, sCommand);    // Set Compliance, Autorange Measure
     iErr |= gpibWrite(gpibId, "F0,0");      // Source V Measure I dc
     iErr |= gpibWrite(gpibId, "G5,2,0");    // Output Source, Measure, No Prefix, DC
