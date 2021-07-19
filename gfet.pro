@@ -66,6 +66,7 @@ LIBS += -L"/usr/local/lib" -lgpib # To include libgpib.so from /usr/local/lib
 INCLUDEPATH += /usr/local/include
 
 
+DISTFILES += .gitignore
 DISTFILES += doc/linux_Gpib_HowTo.txt
 DISTFILES += LICENSE
 DISTFILES += README.md
