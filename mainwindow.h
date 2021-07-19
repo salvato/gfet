@@ -74,7 +74,7 @@ private slots:
     void onComplianceEvent();
     void onClearComplianceEvent();
     void onNewVgReading(QDateTime dataTime, QString sDataRead);
-    void onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead);
+    void onNewRdsReading(QDateTime dataTime, QString sDataRead);
     void onNewVgGenerated(QDateTime dataTime, QString sDataRead);
     void onIdsSweepDone(QDateTime dataTime, QString sData);
     void on_comboIds_currentIndexChanged(int indx);

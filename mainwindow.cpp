@@ -612,7 +612,7 @@ MainWindow::on_startRdsButton_clicked() {
     connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
             this, SLOT(onNewVgGenerated(QDateTime,QString)));
     connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
-            this, SLOT(onNewIdsEvaluatorReading(QDateTime,QString)));
+            this, SLOT(onNewRdsReading(QDateTime,QString)));
     currentStep = 1;
     QString sTitle = QString("Vds=%1").arg(currentVds);
     pPlot->NewDataSet(currentStep,//Id
@@ -771,7 +771,7 @@ MainWindow::onNewVgGenerated(QDateTime dataTime, QString sDataRead) {
 
 
 void
-MainWindow::onNewIdsEvaluatorReading(QDateTime dataTime, QString sDataRead) {
+MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
     Q_UNUSED(dataTime)
     if(!DecodeReadings(sDataRead, &Ids, &Vds))
         return;
