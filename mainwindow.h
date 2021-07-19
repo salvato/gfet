@@ -60,7 +60,7 @@ protected:
     void saveSettings();
     void writeFileHeader();
     void startVdsSweep();
-    void initPlot();
+    void initPlot(QString sTitle);
     void stopMeasure();
     bool prepareOutputFile(QString sBaseDir, QString sFileName, int currentStep);
     bool prepareLogFile();
@@ -104,7 +104,6 @@ private:
     int              gpibBoardID;
     Addr4882_t       idsAddress;
     Addr4882_t       vgAddress;
-    QString          sMeasurementPlotLabel;
     int              maxPlotPoints;
     bool             bMeasureInProgress;
     double           currentVg;

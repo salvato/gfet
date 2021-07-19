@@ -507,11 +507,10 @@ MainWindow::prepareOutputFile(QString sBaseDir,
 
 
 void
-MainWindow::initPlot() {
+MainWindow::initPlot(QString sTitle) {
     if(pPlot) delete pPlot;
     pPlot = nullptr;
-    sMeasurementPlotLabel = QString("Plot Window");
-    pPlot = new Plot2D(this, sMeasurementPlotLabel);
+    pPlot = new Plot2D(this, sTitle);
     pPlot->setWindowTitle(pConfigureDialog->pTabFile->sOutFileName);
     pPlot->setMaxPoints(maxPlotPoints);
     pPlot->SetLimits(0.0, 1.0, 0.0, 1.0, true, true, false, false);
@@ -562,8 +561,8 @@ MainWindow::on_startIDSButton_clicked() {
                 this, SLOT(onClearComplianceEvent()));
     }
 
-    // Init the Plots
-    initPlot();
+    // Init the Plot
+    initPlot("Ids vs Vds");
 
     /////////////////////////////////////////////
     /// Ready to Start the IdsVds_vs_Vg Measure
@@ -613,7 +612,12 @@ MainWindow::on_startRdsButton_clicked() {
             this, SLOT(onNewVgGenerated(QDateTime,QString)));
     connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
             this, SLOT(onNewRdsReading(QDateTime,QString)));
+
+    // Init the Plot
+    initPlot("Rds vs Vg");
+
     currentStep = 1;
+
     QString sTitle = QString("Vds=%1").arg(currentVds);
     pPlot->NewDataSet(currentStep,//Id
                       3, //Pen Width
@@ -802,14 +806,15 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
         pVgGenerator->sendTrigger();
     }
     else { // Vg outside the requested interval
+        pOutputFile->close();
         // New Vds Step (if still inside the requested interval)
         currentVds += pConfigureDialog->pIdsTab->dStep;
+
         if((currentVds <= qMax(pConfigureDialog->pIdsTab->dStop, pConfigureDialog->pIdsTab->dStart)) &&
            (currentVds >= qMin(pConfigureDialog->pIdsTab->dStop, pConfigureDialog->pIdsTab->dStart)) )
         { // Vds inside the requested interval
-            pOutputFile->close();
             currentStep++;
-            // Open the Output file
+            // Open the new Output file
             ui->statusBar->showMessage("Opening Output file...");
             if(!prepareOutputFile(pConfigureDialog->pTabFile->sBaseDir,
                                   pConfigureDialog->pTabFile->sOutFileName,
@@ -818,7 +823,7 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
                 stopMeasure();
                 return;
             }
-            // Write File Header
+            // Write the new File Header
             writeFileHeader();
 
             // Create New Plot Data Set
