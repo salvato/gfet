@@ -422,7 +422,11 @@ MainWindow::writeFileHeader() {
 
 bool
 MainWindow::DecodeReadings(QString sDataRead, double *current, double *voltage) { // Decode readings
+#if (QT_VERSION < 0x051400)
+    QStringList sMeasures = QStringList(sDataRead.split(",", QString::SkipEmptyParts));
+#else
     QStringList sMeasures = QStringList(sDataRead.split(",", Qt::SkipEmptyParts));
+#endif
     if(sMeasures.count() < 2) {
         logMessage("Measurement Format Error");
         return false;
@@ -648,9 +652,9 @@ MainWindow::onClearComplianceEvent() {
 
 
 void
-MainWindow::onNewVgReading(QDateTime dataTime, QString sDataRead) {
+MainWindow::onNewVgReading(QDateTime dataTime, QString sData) {
     Q_UNUSED(dataTime)
-    if(!DecodeReadings(sDataRead, &Ids, &Vds))
+    if(!DecodeReadings(sData, &Ids, &Vds))
         return;
     ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
     ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
@@ -672,7 +676,11 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     Q_UNUSED(dataTime)
     disconnect(pIdsEvaluator, SIGNAL(sweepDone(QDateTime,QString)), this, nullptr);
     ui->statusBar->showMessage("Sweep Done: Decoding readings...Please wait");
+#if (QT_VERSION < 0x051400)
+    QStringList sMeasures = QStringList(sData.split(",", QString::SkipEmptyParts));
+#else
     QStringList sMeasures = QStringList(sData.split(",", Qt::SkipEmptyParts));
+#endif
     if(sMeasures.count() < 2) {
         stopMeasure();
         ui->statusBar->showMessage(QString(Q_FUNC_INFO) + QString(" Error: No Sweep Values"));

@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 
-#define TEST_NO_INTERFACE
+//#define TEST_NO_INTERFACE
 
 
 
@@ -73,7 +73,7 @@ private slots:
     void on_startIDSButton_clicked();
     void onComplianceEvent();
     void onClearComplianceEvent();
-    void onNewVgReading(QDateTime dataTime, QString sDataRead);
+    void onNewVgReading(QDateTime dataTime, QString sData);
     void onNewRdsReading(QDateTime dataTime, QString sDataRead);
     void onNewVgGenerated(QDateTime dataTime, QString sDataRead);
     void onIdsSweepDone(QDateTime dataTime, QString sData);

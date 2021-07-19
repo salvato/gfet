@@ -23,10 +23,10 @@ TARGET = gfet
 TEMPLATE = app
 
 
-SOURCES += main.cpp \
-    fake236.cpp \
-    idstab.cpp \
-    vgtab.cpp
+SOURCES += main.cpp
+SOURCES += fake236.cpp
+SOURCES += idstab.cpp
+SOURCES += vgtab.cpp
 SOURCES += mainwindow.cpp
 SOURCES += axesdialog.cpp
 SOURCES += AxisFrame.cpp
@@ -36,16 +36,15 @@ SOURCES += DataSetProperties.cpp
 SOURCES += datastream2d.cpp
 SOURCES += filetab.cpp
 SOURCES += gpibdevice.cpp
-SOURCES +=
 SOURCES += keithley236.cpp
 SOURCES += plot2d.cpp
 SOURCES += plotpropertiesdlg.cpp
 
 
-HEADERS += mainwindow.h \
-    fake236.h \
-    idstab.h \
-    vgtab.h
+HEADERS += mainwindow.h
+HEADERS +=  fake236.h
+HEADERS += idstab.h
+HEADERS += vgtab.h
 HEADERS += axesdialog.h
 HEADERS += AxisFrame.h
 HEADERS += AxisLimits.h
@@ -54,7 +53,6 @@ HEADERS += DataSetProperties.h
 HEADERS += datastream2d.h
 HEADERS += filetab.h
 HEADERS += gpibdevice.h
-HEADERS +=
 HEADERS += keithley236.h
 HEADERS += plot2d.h
 HEADERS += plotpropertiesdlg.h
@@ -68,9 +66,7 @@ LIBS += -L"/usr/local/lib" -lgpib # To include libgpib.so from /usr/local/lib
 INCLUDEPATH += /usr/local/include
 
 
-DISTFILES += doc/linux_Gpib_HowTo.txt \
-    .gitignore \
-    .gitignore
+DISTFILES += doc/linux_Gpib_HowTo.txt
 DISTFILES += LICENSE
 DISTFILES += README.md
 DISTFILES += doc/GPIBProgrammingReferenceManual.pdf
