@@ -87,7 +87,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Gate Current</string>
+      <string>Current</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="voltageEdit">
@@ -132,7 +132,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Gate Voltage</string>
+      <string>Voltage</string>
      </property>
     </widget>
     <widget class="QLabel" name="labelCompliance">

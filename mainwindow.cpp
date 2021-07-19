@@ -151,6 +151,9 @@ MainWindow::closeEvent(QCloseEvent *event) {
     pIdsEvaluator = nullptr;
     pVgGenerator  = nullptr;
 
+    if(pPlot) delete pPlot;
+    pPlot = nullptr;
+
     if(pLogFile) {
         if(pLogFile->isOpen()) {
             pLogFile->flush();
@@ -470,10 +473,8 @@ MainWindow::stopMeasure() {
         pVgGenerator->disconnect();
         pVgGenerator->stopSweep();
     }
-    if(presentMeasure == IdsVds_vs_Vg)
-        ui->startIDSButton->setText("Ids-Vds (vs Vg)");
-    else
-        ui->startRdsButton->setText("Rds (vs Vg)");
+    ui->startIDSButton->setText("Ids-Vds (vs Vg)");
+    ui->startRdsButton->setText("Rds (vs Vg)");
     presentMeasure = NoMeasure;
     updateUserInterface();
     QApplication::restoreOverrideCursor();
@@ -514,7 +515,7 @@ void
 MainWindow::initPlot(QString sTitle) {
     if(pPlot) delete pPlot;
     pPlot = nullptr;
-    pPlot = new Plot2D(this, sTitle);
+    pPlot = new Plot2D(nullptr, sTitle);
     pPlot->setWindowTitle(pConfigureDialog->pTabFile->sOutFileName);
     pPlot->setMaxPoints(maxPlotPoints);
     pPlot->SetLimits(0.0, 1.0, 0.0, 1.0, true, true, false, false);
@@ -552,18 +553,16 @@ MainWindow::on_startIDSButton_clicked() {
             this, SLOT(onClearComplianceEvent()));
 
     // Initializing Vg Generator
-    if(pVgGenerator) {
-        ui->statusBar->showMessage("Initializing Vg Generator..");
-        if(pVgGenerator->init()) {
-            ui->statusBar->showMessage("Unable to Initialize Keithley 236...");
-            QApplication::restoreOverrideCursor();
-            return;
-        }
-        connect(pVgGenerator, SIGNAL(complianceEvent()),
-                this, SLOT(onComplianceEvent()));
-        connect(pVgGenerator, SIGNAL(clearCompliance()),
-                this, SLOT(onClearComplianceEvent()));
+    ui->statusBar->showMessage("Initializing Vg Generator..");
+    if(pVgGenerator->init()) {
+        ui->statusBar->showMessage("Unable to Initialize Keithley 236...");
+        QApplication::restoreOverrideCursor();
+        return;
     }
+    connect(pVgGenerator, SIGNAL(complianceEvent()),
+            this, SLOT(onComplianceEvent()));
+    connect(pVgGenerator, SIGNAL(clearCompliance()),
+            this, SLOT(onClearComplianceEvent()));
 
     // Init the Plot
     initPlot("Ids vs Vds");
@@ -606,16 +605,34 @@ MainWindow::on_startRdsButton_clicked() {
     QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
     presentMeasure = Rds_vs_Vg;
 
+    // Initializing Ids Evaluator
+    ui->statusBar->showMessage("Initializing Ids Evaluator...");
+    if(pIdsEvaluator->init()) {
+        ui->statusBar->showMessage("Unable to Initialize Ids Evaluator...");
+        stopMeasure();
+        return;
+    }
+    connect(pIdsEvaluator, SIGNAL(complianceEvent()),
+            this, SLOT(onComplianceEvent()));
+    connect(pIdsEvaluator, SIGNAL(clearCompliance()),
+            this, SLOT(onClearComplianceEvent()));
+
+    // Initializing Vg Generator
+    ui->statusBar->showMessage("Initializing Vg Generator..");
+    if(pVgGenerator->init()) {
+        ui->statusBar->showMessage("Unable to Initialize Keithley 236...");
+        QApplication::restoreOverrideCursor();
+        return;
+    }
+    connect(pVgGenerator, SIGNAL(complianceEvent()),
+            this, SLOT(onComplianceEvent()));
+    connect(pVgGenerator, SIGNAL(clearCompliance()),
+            this, SLOT(onClearComplianceEvent()));
+
     currentVg  = pConfigureDialog->pVgTab->dStart;
     currentVds = pConfigureDialog->pIdsTab->dStart;
     pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
     pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
-
-    while(!pVgGenerator->isReadyForTrigger()) {}
-    connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
-            this, SLOT(onNewVgGenerated(QDateTime,QString)));
-    connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
-            this, SLOT(onNewRdsReading(QDateTime,QString)));
 
     // Init the Plot
     initPlot("Rds vs Vg");
@@ -632,7 +649,28 @@ MainWindow::on_startRdsButton_clicked() {
     pPlot->SetShowDataSet(currentStep, true);
     pPlot->SetShowTitle(currentStep, true);
     pPlot->UpdatePlot();
+
+    ui->statusBar->showMessage("Opening Output file...");
+    if(!prepareOutputFile(pConfigureDialog->pTabFile->sBaseDir,
+                          pConfigureDialog->pTabFile->sOutFileName,
+                          currentStep))
+    {
+        stopMeasure();
+        return;
+    }
+    // Write the new File Header
+    writeFileHeader();
+
+    connect(pVgGenerator, SIGNAL(newReading(QDateTime,QString)),
+            this, SLOT(onNewVgGenerated(QDateTime,QString)));
+    connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
+            this, SLOT(onNewRdsReading(QDateTime,QString)));
+
+    ui->startIDSButton->setText("Stop");
+    while(!pVgGenerator->isReadyForTrigger()) {}
     pVgGenerator->sendTrigger();
+    updateUserInterface();
+    ui->statusBar->showMessage("Measure Running...");
 }
 
 
@@ -846,8 +884,6 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
             pPlot->SetShowTitle(currentStep, true);
             pPlot->UpdatePlot();
 
-            // Start with Vds and Vg initial values
-            currentVds = pConfigureDialog->pIdsTab->dStart;
             pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
             currentVg = pConfigureDialog->pVgTab->dStart;
             pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
@@ -856,6 +892,7 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
         }  // Vds inside the requested interval
 
         else { // Vds esterno all'intervallo richiesto
+            ui->statusBar->showMessage("Measure Done");
             stopMeasure(); // Close Output File and update UI
         }
     } // Vg outside the requested interval
