@@ -204,6 +204,13 @@ Keithley236::initSourceV(double dAppliedVoltage, double dCompliance) {
 
 
 int
+Keithley236::standBy() {
+    gpibWrite(gpibId, "N0X");        // Place in Stand By
+    return NO_ERROR;
+}
+
+
+int
 Keithley236::endMeasure() {
 #if defined(Q_OS_LINUX)
     pollTimer.stop();

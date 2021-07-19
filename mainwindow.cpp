@@ -632,7 +632,6 @@ MainWindow::on_startRdsButton_clicked() {
     currentVg  = pConfigureDialog->pVgTab->dStart;
     currentVds = pConfigureDialog->pIdsTab->dStart;
     pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
-    pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
 
     // Init the Plot
     initPlot("Rds vs Vg");
@@ -666,7 +665,8 @@ MainWindow::on_startRdsButton_clicked() {
     connect(pIdsEvaluator, SIGNAL(newReading(QDateTime,QString)),
             this, SLOT(onNewRdsReading(QDateTime,QString)));
 
-    ui->startIDSButton->setText("Stop");
+    ui->startRdsButton->setText("Stop");
+
     while(!pVgGenerator->isReadyForTrigger()) {}
     pVgGenerator->sendTrigger();
     updateUserInterface();
@@ -815,6 +815,7 @@ MainWindow::onNewVgGenerated(QDateTime dataTime, QString sDataRead) {
     Q_UNUSED(dataTime)
     if(!DecodeReadings(sDataRead, &Ig, &Vg))
         return;
+    pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
     while(!pIdsEvaluator->isReadyForTrigger()) {}
     pIdsEvaluator->sendTrigger();
 }
@@ -823,6 +824,7 @@ MainWindow::onNewVgGenerated(QDateTime dataTime, QString sDataRead) {
 void
 MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
     Q_UNUSED(dataTime)
+    pIdsEvaluator->standBy();
     if(!DecodeReadings(sDataRead, &Ids, &Vds))
         return;
     ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
@@ -884,9 +886,9 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
             pPlot->SetShowTitle(currentStep, true);
             pPlot->UpdatePlot();
 
-            pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
             currentVg = pConfigureDialog->pVgTab->dStart;
             pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
+
             while(!pVgGenerator->isReadyForTrigger()) {}
             pVgGenerator->sendTrigger();
         }  // Vds inside the requested interval

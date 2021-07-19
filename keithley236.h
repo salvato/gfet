@@ -45,6 +45,7 @@ public:
     int      stopSweep();
     bool     sendTrigger();
     bool     isReadyForTrigger();
+    int      standBy();
 
 signals:
     void     complianceEvent();
