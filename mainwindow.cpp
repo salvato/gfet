@@ -667,6 +667,7 @@ MainWindow::on_startRdsButton_clicked() {
 
     ui->startRdsButton->setText("Stop");
 
+    nMeasure = 0;
     while(!pVgGenerator->isReadyForTrigger()) {}
     pVgGenerator->sendTrigger();
     updateUserInterface();
@@ -829,7 +830,12 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
         return;
     ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
     ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
-
+    nMeasure = 1 - nMeasure;
+    if(nMeasure > 0) { // We consider only evry other measurement
+        while(!pVgGenerator->isReadyForTrigger()) {}
+        pVgGenerator->sendTrigger();
+        return;
+    }
     // Salvo il dato su file
     QString sData = QString("%1 %2 %3 %4\n")
             .arg(Vg,  12, 'g', 6, ' ')

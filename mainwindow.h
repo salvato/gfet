@@ -113,6 +113,7 @@ private:
     double           Vds;
     double           Ids;
     int              currentStep;
+    int              nMeasure;
 
     QString          sLogFileName;
     QString          sLogDir;
