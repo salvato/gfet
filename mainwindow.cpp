@@ -81,8 +81,9 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
     setWindowIcon(QIcon("qrc:/myLogoT.png"));
 
     // Setup the QLineEdit styles
-    sNormalStyle = ui->labelIdsCompliance->styleSheet();
-    sErrorStyle  = "QLabel { color: rgb(255, 255, 255); background: rgb(255, 0, 0); selection-background-color: rgb(128, 128, 255); }";
+
+    sNormalStyle = ui->idsEdit->styleSheet();
+    sErrorStyle  = "QLineEdit { color: rgb(255, 255, 255); background: rgb(255, 0, 0); selection-background-color: rgb(128, 128, 255); }";
 
     // Restore Geometry and State of the window
     QSettings settings;
@@ -674,37 +675,33 @@ MainWindow::on_startRdsButton_clicked() {
     while(!pVgGenerator->isReadyForTrigger()) {}
     pVgGenerator->sendTrigger();
     updateUserInterface();
-    ui->statusBar->showMessage("Measure Running...");
+    ui->statusBar->showMessage(QString("Measure Started @Vds= %1...").arg(currentVds));
 }
 
 
 void
 MainWindow::onIdsComplianceEvent() {
-    ui->labelIdsCompliance->setText("Cmp");
-    ui->labelIdsCompliance->setStyleSheet(sErrorStyle);
+    ui->idsEdit->setStyleSheet(sErrorStyle);
     logMessage("Compliance Event");
 }
 
 
 void
 MainWindow::onIgComplianceEvent() {
-    ui->labelIgCompliance->setText("Cmp");
-    ui->labelIgCompliance->setStyleSheet(sErrorStyle);
+    ui->igEdit->setStyleSheet(sErrorStyle);
     logMessage("Compliance Event");
 }
 
 
 void
 MainWindow::onClearIdsComplianceEvent() {
-    ui->labelIdsCompliance->setText("");
-    ui->labelIdsCompliance->setStyleSheet(sNormalStyle);
+    ui->idsEdit->setStyleSheet(sNormalStyle);
 }
 
 
 void
 MainWindow::onClearIgComplianceEvent() {
-    ui->labelIgCompliance->setText("");
-    ui->labelIgCompliance->setStyleSheet(sNormalStyle);
+    ui->igEdit->setStyleSheet(sNormalStyle);
 }
 
 
@@ -868,9 +865,10 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
     pOutputFile->flush();
 
     // Plotto il dato
-    pPlot->NewPoint(currentStep, Vg, Vds/Ids);
-    pPlot->UpdatePlot();
-
+    if(fabs(Ids) > 1.0e-14) {
+        pPlot->NewPoint(currentStep, Vg, Vds/Ids);
+        pPlot->UpdatePlot();
+    }
     // New Vg Step (if still inside the requested interval)
     currentVg += pConfigureDialog->pVgTab->dStep;
 
@@ -919,6 +917,7 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
 
             while(!pVgGenerator->isReadyForTrigger()) {}
             pVgGenerator->sendTrigger();
+            ui->statusBar->showMessage(QString("Measure Started @Vds= %1...").arg(currentVds));
         }  // Vds inside the requested interval
 
         else { // Vds esterno all'intervallo richiesto

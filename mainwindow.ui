@@ -33,9 +33,9 @@
    <widget class="QGroupBox" name="statusGroupBox">
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>180</x>
       <y>0</y>
-      <width>241</width>
+      <width>191</width>
       <height>211</height>
      </rect>
     </property>
@@ -135,28 +135,6 @@
       <string>Vds</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelIdsCompliance">
-     <property name="geometry">
-      <rect>
-       <x>189</x>
-       <y>50</y>
-       <width>31</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="lineWidth">
-      <number>0</number>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
     <widget class="QLineEdit" name="vgEdit">
      <property name="geometry">
       <rect>
@@ -245,28 +223,6 @@
      </property>
      <property name="text">
       <string>Ig</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="labelIgCompliance">
-     <property name="geometry">
-      <rect>
-       <x>180</x>
-       <y>130</y>
-       <width>31</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="lineWidth">
-      <number>0</number>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </widget>
