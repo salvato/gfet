@@ -638,7 +638,7 @@ MainWindow::on_startRdsButton_clicked() {
 
     currentStep = 1;
 
-    QString sTitle = QString("Vds=%1").arg(currentVds);
+    QString sTitle = QString("%1").arg(currentVds);
     pPlot->NewDataSet(currentStep,//Id
                       3, //Pen Width
                       Colors[currentStep % 7],
@@ -697,7 +697,7 @@ MainWindow::onNewVgReading(QDateTime dataTime, QString sData) {
         return;
     ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
     ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
-    QString sTitle = QString("Vds=%1").arg(Vds);
+    QString sTitle = QString("%1").arg(currentVg);
     pPlot->NewDataSet(currentStep,//Id
                       3, //Pen Width
                       Colors[currentStep % 7],
@@ -755,7 +755,7 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     pOutputFile->close();
     // Do we have anoter Vg step to execute ?
     currentVg += pConfigureDialog->pVgTab->dStep;
-    if((currentVg > qMax(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) &&
+    if((currentVg > qMax(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) ||
        (currentVg < qMin(pConfigureDialog->pVgTab->dStop, pConfigureDialog->pVgTab->dStart)) )
     { // No ! all Vg steps have been executed
         stopMeasure();
@@ -767,7 +767,7 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     pVgGenerator->initSourceV(currentVg, pConfigureDialog->pVgTab->dCompliance);
     while(!pVgGenerator->isReadyForTrigger()) {}
     pVgGenerator->sendTrigger();
-    QString sTitle = QString("Vg=%1").arg(currentVg);
+    QString sTitle = QString("%1").arg(currentVg);
     currentStep++;
     pPlot->NewDataSet(currentStep,//Id
                       3, //Pen Width
@@ -881,7 +881,7 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
             writeFileHeader();
 
             // Create New Plot Data Set
-            QString sTitle = QString("Vds=%1").arg(currentVds);
+            QString sTitle = QString("%1").arg(currentVds);
             pPlot->NewDataSet(currentStep,//Id
                               3, //Pen Width
                               Colors[currentStep % 7],
