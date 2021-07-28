@@ -71,8 +71,10 @@ protected:
 private slots:
     void onLogMessage(QString sMessage);
     void on_startIDSButton_clicked();
-    void onComplianceEvent();
-    void onClearComplianceEvent();
+    void onIdsComplianceEvent();
+    void onIgComplianceEvent();
+    void onClearIdsComplianceEvent();
+    void onClearIgComplianceEvent();
     void onNewVgReading(QDateTime dataTime, QString sData);
     void onNewRdsReading(QDateTime dataTime, QString sDataRead);
     void onNewVgGenerated(QDateTime dataTime, QString sDataRead);

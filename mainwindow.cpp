@@ -81,7 +81,7 @@ MainWindow::MainWindow(int iBoard, QWidget *parent)
     setWindowIcon(QIcon("qrc:/myLogoT.png"));
 
     // Setup the QLineEdit styles
-    sNormalStyle = ui->labelCompliance->styleSheet();
+    sNormalStyle = ui->labelIdsCompliance->styleSheet();
     sErrorStyle  = "QLabel { color: rgb(255, 255, 255); background: rgb(255, 0, 0); selection-background-color: rgb(128, 128, 255); }";
 
     // Restore Geometry and State of the window
@@ -532,6 +532,8 @@ MainWindow::on_startIDSButton_clicked() {
         return;
     }
     //else
+    onClearIdsComplianceEvent();
+    onClearIgComplianceEvent();
     if(pConfigureDialog) delete pConfigureDialog;
     pConfigureDialog = new ConfigureDialog(this);
     if(pConfigureDialog->exec() == QDialog::Rejected)
@@ -548,9 +550,9 @@ MainWindow::on_startIDSButton_clicked() {
         return;
     }
     connect(pIdsEvaluator, SIGNAL(complianceEvent()),
-            this, SLOT(onComplianceEvent()));
+            this, SLOT(onIdsComplianceEvent()));
     connect(pIdsEvaluator, SIGNAL(clearCompliance()),
-            this, SLOT(onClearComplianceEvent()));
+            this, SLOT(onClearIdsComplianceEvent()));
 
     // Initializing Vg Generator
     ui->statusBar->showMessage("Initializing Vg Generator..");
@@ -560,9 +562,9 @@ MainWindow::on_startIDSButton_clicked() {
         return;
     }
     connect(pVgGenerator, SIGNAL(complianceEvent()),
-            this, SLOT(onComplianceEvent()));
+            this, SLOT(onIgComplianceEvent()));
     connect(pVgGenerator, SIGNAL(clearCompliance()),
-            this, SLOT(onClearComplianceEvent()));
+            this, SLOT(onClearIgComplianceEvent()));
 
     // Init the Plot
     initPlot("Ids vs Vds");
@@ -595,7 +597,8 @@ MainWindow::on_startRdsButton_clicked() {
     }
 
     //else (New Rds vs Vg Measure Starting...)
-
+    onClearIdsComplianceEvent();
+    onClearIgComplianceEvent();
     // Get Measurement Configuration
     if(pConfigureDialog) delete pConfigureDialog;
     pConfigureDialog = new ConfigureDialog(this);
@@ -676,27 +679,42 @@ MainWindow::on_startRdsButton_clicked() {
 
 
 void
-MainWindow::onComplianceEvent() {
-    ui->labelCompliance->setText("Compliance");
-    ui->labelCompliance->setStyleSheet(sErrorStyle);
+MainWindow::onIdsComplianceEvent() {
+    ui->labelIdsCompliance->setText("Cmp");
+    ui->labelIdsCompliance->setStyleSheet(sErrorStyle);
     logMessage("Compliance Event");
 }
 
 
 void
-MainWindow::onClearComplianceEvent() {
-    ui->labelCompliance->setText("");
-    ui->labelCompliance->setStyleSheet(sNormalStyle);
+MainWindow::onIgComplianceEvent() {
+    ui->labelIgCompliance->setText("Cmp");
+    ui->labelIgCompliance->setStyleSheet(sErrorStyle);
+    logMessage("Compliance Event");
+}
+
+
+void
+MainWindow::onClearIdsComplianceEvent() {
+    ui->labelIdsCompliance->setText("");
+    ui->labelIdsCompliance->setStyleSheet(sNormalStyle);
+}
+
+
+void
+MainWindow::onClearIgComplianceEvent() {
+    ui->labelIgCompliance->setText("");
+    ui->labelIgCompliance->setStyleSheet(sNormalStyle);
 }
 
 
 void
 MainWindow::onNewVgReading(QDateTime dataTime, QString sData) {
     Q_UNUSED(dataTime)
-    if(!DecodeReadings(sData, &Ids, &Vds))
+    if(!DecodeReadings(sData, &Ig, &Vg))
         return;
-    ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
-    ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
+    ui->igEdit->setText(QString("%1").arg(Ig, 10, 'g', 4, ' '));
+    ui->vgEdit->setText(QString("%1").arg(Vg, 10, 'g', 4, ' '));
     QString sTitle = QString("%1").arg(currentVg);
     pPlot->NewDataSet(currentStep,//Id
                       3, //Pen Width
@@ -723,7 +741,8 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     if(sMeasures.count() < 2) {
         stopMeasure();
         ui->statusBar->showMessage(QString(Q_FUNC_INFO) + QString(" Error: No Sweep Values"));
-        onClearComplianceEvent();
+        onClearIdsComplianceEvent();
+        onClearIgComplianceEvent();
         return;
     }
     // Open the Output file
@@ -760,7 +779,8 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     { // No ! all Vg steps have been executed
         stopMeasure();
         ui->statusBar->showMessage("Measure Done");
-        onClearComplianceEvent();
+        onClearIdsComplianceEvent();
+        onClearIgComplianceEvent();
         return;
     }
     // else we have anoter Vg step to execute
@@ -816,6 +836,8 @@ MainWindow::onNewVgGenerated(QDateTime dataTime, QString sDataRead) {
     Q_UNUSED(dataTime)
     if(!DecodeReadings(sDataRead, &Ig, &Vg))
         return;
+    ui->igEdit->setText(QString("%1").arg(Ig, 10, 'g', 4, ' '));
+    ui->vgEdit->setText(QString("%1").arg(Vg, 10, 'g', 4, ' '));
     pIdsEvaluator->initSourceV(currentVds, pConfigureDialog->pIdsTab->dCompliance);
     while(!pIdsEvaluator->isReadyForTrigger()) {}
     pIdsEvaluator->sendTrigger();
@@ -828,8 +850,8 @@ MainWindow::onNewRdsReading(QDateTime dataTime, QString sDataRead) {
     pIdsEvaluator->standBy();
     if(!DecodeReadings(sDataRead, &Ids, &Vds))
         return;
-    ui->currentEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
-    ui->voltageEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
+    ui->idsEdit->setText(QString("%1").arg(Ids, 10, 'g', 4, ' '));
+    ui->vdsEdit->setText(QString("%1").arg(Vds, 10, 'g', 4, ' '));
     nMeasure = 1 - nMeasure;
     if(nMeasure > 0) { // We consider only evry other measurement
         while(!pVgGenerator->isReadyForTrigger()) {}

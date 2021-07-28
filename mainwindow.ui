@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>388</width>
-    <height>328</height>
+    <width>417</width>
+    <height>324</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,9 +33,9 @@
    <widget class="QGroupBox" name="statusGroupBox">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>160</x>
       <y>0</y>
-      <width>250</width>
+      <width>241</width>
       <height>211</height>
      </rect>
     </property>
@@ -45,10 +45,10 @@
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
-    <widget class="QLineEdit" name="currentEdit">
+    <widget class="QLineEdit" name="idsEdit">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>46</x>
        <y>50</y>
        <width>100</width>
        <height>25</height>
@@ -67,7 +67,7 @@
     <widget class="QLabel" name="labelA">
      <property name="geometry">
       <rect>
-       <x>220</x>
+       <x>160</x>
        <y>50</y>
        <width>31</width>
        <height>25</height>
@@ -77,23 +77,23 @@
       <string>A</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelCurrent">
+    <widget class="QLabel" name="labelIds_2">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>50</y>
-       <width>95</width>
+       <width>31</width>
        <height>25</height>
       </rect>
      </property>
      <property name="text">
-      <string>Current</string>
+      <string>Ids</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="voltageEdit">
+    <widget class="QLineEdit" name="vdsEdit">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>46</x>
        <y>90</y>
        <width>100</width>
        <height>25</height>
@@ -112,7 +112,7 @@
     <widget class="QLabel" name="labelV">
      <property name="geometry">
       <rect>
-       <x>220</x>
+       <x>160</x>
        <y>90</y>
        <width>31</width>
        <height>25</height>
@@ -122,25 +122,25 @@
       <string>V</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelVoltage">
+    <widget class="QLabel" name="labelVds">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>90</y>
-       <width>95</width>
+       <width>31</width>
        <height>25</height>
       </rect>
      </property>
      <property name="text">
-      <string>Voltage</string>
+      <string>Vds</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelCompliance">
+    <widget class="QLabel" name="labelIdsCompliance">
      <property name="geometry">
       <rect>
-       <x>110</x>
-       <y>170</y>
-       <width>100</width>
+       <x>189</x>
+       <y>50</y>
+       <width>31</width>
        <height>25</height>
       </rect>
      </property>
@@ -157,27 +157,116 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="labelIds">
+    <widget class="QLineEdit" name="vgEdit">
      <property name="geometry">
       <rect>
-       <x>110</x>
-       <y>130</y>
-       <width>131</width>
+       <x>46</x>
+       <y>170</y>
+       <width>100</width>
        <height>25</height>
       </rect>
      </property>
      <property name="text">
-      <string>Ids Meas. Address</string>
+      <string>- - - - - - - - -</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboIds">
+    <widget class="QLabel" name="labelV_2">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>170</y>
+       <width>31</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>V</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="igEdit">
+     <property name="geometry">
+      <rect>
+       <x>46</x>
+       <y>130</y>
+       <width>100</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>- - - - - - - - -</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelA_2">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>130</y>
+       <width>31</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>A</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelVg">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>170</y>
+       <width>31</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Vg</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelIg">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>130</y>
-       <width>95</width>
-       <height>32</height>
+       <width>31</width>
+       <height>25</height>
       </rect>
+     </property>
+     <property name="text">
+      <string>Ig</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelIgCompliance">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>130</y>
+       <width>31</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </widget>
@@ -192,6 +281,29 @@
     </property>
     <property name="text">
      <string>Rds (vs Vg)</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelIds">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>230</y>
+      <width>131</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Ids Meas. Address</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboIds">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>230</y>
+      <width>95</width>
+      <height>32</height>
+     </rect>
     </property>
    </widget>
   </widget>
