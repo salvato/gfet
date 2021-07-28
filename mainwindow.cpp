@@ -616,9 +616,9 @@ MainWindow::on_startRdsButton_clicked() {
         return;
     }
     connect(pIdsEvaluator, SIGNAL(complianceEvent()),
-            this, SLOT(onComplianceEvent()));
+            this, SLOT(onIdsComplianceEvent()));
     connect(pIdsEvaluator, SIGNAL(clearCompliance()),
-            this, SLOT(onClearComplianceEvent()));
+            this, SLOT(onClearIdsComplianceEvent()));
 
     // Initializing Vg Generator
     ui->statusBar->showMessage("Initializing Vg Generator..");
@@ -628,9 +628,9 @@ MainWindow::on_startRdsButton_clicked() {
         return;
     }
     connect(pVgGenerator, SIGNAL(complianceEvent()),
-            this, SLOT(onComplianceEvent()));
+            this, SLOT(onIgComplianceEvent()));
     connect(pVgGenerator, SIGNAL(clearCompliance()),
-            this, SLOT(onClearComplianceEvent()));
+            this, SLOT(onClearIgComplianceEvent()));
 
     currentVg  = pConfigureDialog->pVgTab->dStart;
     currentVds = pConfigureDialog->pIdsTab->dStart;
