@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSharedMemory>
 #include <QFileInfo>
 #include <QThread>
+#include <QDebug>
 
 
 void
@@ -64,6 +65,7 @@ main(int argc, char *argv[]) {
     QCoreApplication::setApplicationName("gfet");
     QCoreApplication::setApplicationVersion("0.0.1");
 
+    qDebug() << QT_VERSION;
 
 #ifndef TEST_NO_INTERFACE
 #ifdef Q_OS_LINUX

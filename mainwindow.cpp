@@ -426,7 +426,7 @@ MainWindow::writeFileHeader() {
 
 bool
 MainWindow::DecodeReadings(QString sDataRead, double *current, double *voltage) { // Decode readings
-#if (QT_VERSION < 0x051400)
+#if (QT_VERSION < 0x050E00)
     QStringList sMeasures = QStringList(sDataRead.split(",", QString::SkipEmptyParts));
 #else
     QStringList sMeasures = QStringList(sDataRead.split(",", Qt::SkipEmptyParts));
@@ -730,7 +730,7 @@ MainWindow::onIdsSweepDone(QDateTime dataTime, QString sData) {
     Q_UNUSED(dataTime)
     disconnect(pIdsEvaluator, SIGNAL(sweepDone(QDateTime,QString)), this, nullptr);
     ui->statusBar->showMessage("Sweep Done: Decoding readings...Please wait");
-#if (QT_VERSION < 0x051400)
+#if (QT_VERSION < 0x050E00)
     QStringList sMeasures = QStringList(sData.split(",", QString::SkipEmptyParts));
 #else
     QStringList sMeasures = QStringList(sData.split(",", Qt::SkipEmptyParts));
