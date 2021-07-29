@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>myLogoT.png</file>
         <file>plot.png</file>
+        <file>GFet.png</file>
     </qresource>
 </RCC>
